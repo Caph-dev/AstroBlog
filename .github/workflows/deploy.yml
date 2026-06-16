@@ -5,9 +5,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, X64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
