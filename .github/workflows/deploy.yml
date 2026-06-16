@@ -11,6 +11,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0
@@ -18,13 +19,5 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -euo pipefail
-            cd /home/ubuntu/caph-blog
-            git fetch origin main
-            git reset --hard origin/main
-            sudo docker build -t caph-blog:latest .
-            sudo docker save caph-blog:latest | sudo k3s ctr images import -
-            sudo kubectl rollout restart deployment/caph-blog -n caph-blog
-            sudo kubectl rollout status deployment/caph-blog -n caph-blog --timeout=180s
-            curl -fsS -o /dev/null https://caph.me/
+          command_timeout: 30m
+          script: bash /home/ubuntu/caph-blog/scripts/deploy.sh
