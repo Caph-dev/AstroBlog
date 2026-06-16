@@ -1,0 +1,9 @@
+node_modules
+dist
+.astro
+.git
+.github
+.vscode
+*.md
+!src/content/**/*.md
+pnpm-debug.log*

@@ -1,0 +1,27 @@
+name: Deploy Blog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: sudo docker build -t caph-blog:latest .
+
+      - name: Import image to k3s
+        run: sudo docker save caph-blog:latest | sudo k3s ctr images import -
+
+      - name: Restart deployment
+        run: |
+          sudo kubectl rollout restart deployment/caph-blog -n caph-blog
+          sudo kubectl rollout status deployment/caph-blog -n caph-blog --timeout=180s
+
+      - name: Verify site
+        run: curl -fsS -o /dev/null http://127.0.0.1/ -H 'Host: caph.me' || curl -fsS -o /dev/null https://caph.me/
