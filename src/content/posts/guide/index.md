@@ -4,7 +4,7 @@ published: 2024-04-01
 description: "如何使用此博客模板。"
 image: "./cover.jpeg"
 tags: ["Fuwari", "博客", "自定义"]
-category: 指南
+category: Guides
 draft: false
 ---
 
@@ -21,7 +21,7 @@ published: 2023-09-09
 description: 这是我新 Astro 博客的第一篇文章。
 image: ./cover.jpg
 tags: [Foo, Bar]
-category: 前端
+category: Front-end
 draft: false
 ---
 ```
