@@ -53,7 +53,7 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "https://images2.imgbox.com/e2/40/0AJbBgMs_o.png",
+	avatar: "assets/images/头像-蕾雅-改.png",
 	name: "Caph",
 	bio: "记录技术与生活的个人博客。",
 	links: [
