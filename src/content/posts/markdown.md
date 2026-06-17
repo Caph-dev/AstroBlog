@@ -44,7 +44,7 @@ draft: false
 
 ```
 define foobar() {
-    print "Welcome to flavor country!";
+    print "欢迎来到风味国度！";
 }
 ```
 
@@ -52,9 +52,9 @@ define foobar() {
 
 ```python
 import time
-# Quick, count to ten!
+# 快，数到十！
 for i in range(10):
-    # (but not *too* quick)
+    # （但别太快）
     time.sleep(0.5)
     print i
 ```
@@ -74,13 +74,13 @@ for i in range(10):
 3. 把所有东西倒进锅里，然后
     按以下步骤操作：
 
-        find wooden spoon
-        uncover pot
-        stir
-        cover pot
-        balance wooden spoon precariously on pot handle
-        wait 10 minutes
-        goto first step (or shut off burner when done)
+        找到木勺
+        揭开锅盖
+        搅拌
+        盖上锅盖
+        把木勺小心地架在锅柄上
+        等待 10 分钟
+        回到第一步（或完成后关火）
 
     不要碰到木勺，否则它会掉下来。
 
@@ -92,13 +92,13 @@ for i in range(10):
 
 表格可以是这样的：
 
-size material color
+尺码 材质 颜色
 
 ---
 
-9 leather brown
-10 hemp canvas natural
-11 glass transparent
+9 皮革 棕色
+10 麻布 原色
+11 玻璃 透明
 
 Table: 鞋子、尺码及材质
 
@@ -106,17 +106,17 @@ Table: 鞋子、尺码及材质
 
 ---
 
-keyword text
+关键词 文本
 
 ---
 
-red Sunsets, apples, and
-other red or reddish
-things.
+红色 夕阳、苹果，以及
+其他红色或偏红的
+事物。
 
-green Leaves, grass, frogs
-and other things it's
-not easy being.
+绿色 树叶、青草、青蛙，
+以及其他「当绿色
+真不容易」的事物。
 
 ---
 
@@ -126,24 +126,24 @@ not easy being.
 
 这是一个定义列表：
 
-apples
+苹果
 : 适合做苹果酱。
-oranges
+橙子
 : 柑橘类水果！
-tomatoes
-: tomatoe 里没有 "e"。
+番茄
+: tomato 里没有 "e"。
 
 同样，文本缩进 4 个空格。（在每个术语/定义对之间加空行，可以让排版更宽松。）
 
 这是一个「行块」：
 
-| Line one
-| Line too
-| Line tree
+| 第一行
+| 第二行
+| 第三行
 
 图片可以这样指定：
 
-[//]: # (![example image]&#40;./demo-banner.png "An exemplary image"&#41;)
+[//]: # (![示例图片]&#40;./demo-banner.png "一张示例图片"&#41;)
 
 行内数学公式这样写：$\omega = d\phi / dt$。行间公式应单独成行，并用双美元符号包裹：
 
