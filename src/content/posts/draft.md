@@ -1,22 +1,23 @@
 ---
-title: Draft Example
+title: 草稿示例
 published: 2022-07-01
-tags: [Markdown, Blogging, Demo]
-category: Examples
+tags: [Markdown, 博客, 演示]
+category: 示例
 draft: true
 ---
 
-# This Article is a Draft
+# 这是一篇草稿文章
 
-This article is currently in a draft state and is not published. Therefore, it will not be visible to the general audience. The content is still a work in progress and may require further editing and review.
+本文目前处于草稿状态，尚未发布，因此不会对普通读者可见。内容仍在编写中，可能还需要进一步编辑和审阅。
 
-When the article is ready for publication, you can update the "draft" field to "false" in the Frontmatter:
+当文章准备好发布时，你可以在 Frontmatter 中将 `draft` 字段更新为 `false`：
 
 ```markdown
 ---
-title: Draft Example
+title: 草稿示例
 published: 2024-01-11T04:40:26.381Z
-tags: [Markdown, Blogging, Demo]
-category: Examples
+tags: [Markdown, 博客, 演示]
+category: 示例
 draft: false
 ---
+```
