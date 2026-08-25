@@ -4,7 +4,7 @@ published: 2024-04-10
 description: 展示 Markdown 中使用 Expressive Code 时代码块的效果。
 tags: [Markdown, 博客, 演示]
 category: Examples
-draft: false
+draft: true
 ---
 
 本文将介绍使用 [Expressive Code](https://expressive-code.com/) 时代码块的呈现效果。以下示例基于官方文档，你可以参考以了解更多细节。

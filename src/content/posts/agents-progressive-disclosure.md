@@ -1,5 +1,5 @@
 ---
-title: 「开源」是时候精简你的 AGENTS.md 了——By 渐进式披露
+title: 是时候精简你的 AGENTS.md 了——By 渐进式披露
 published: 2026-05-28
 description: 用 agents-progressive-disclosure skill 把膨胀的 AGENTS.md 重构成精简路由入口与按需加载的专项文档。
 tags: [开源, Agent, AGENTS.md, 渐进式披露, Cursor, Codex]
