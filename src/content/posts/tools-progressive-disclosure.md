@@ -4,14 +4,14 @@ published: 2026-08-25
 description: 从 Provider 原生、客户端折中到协议改造，盘点业界实现工具渐进式加载的四种方案，以及「初始无 N 个工具、前缀缓存稳定、原生严格 schema」三个目标只能取二的取舍。
 tags: [Agent, Tools, 渐进式披露, Prompt Cache, Claude Code]
 category: Agent
-draft: true
+draft: false
 ---
 
 # Tools 的渐进式披露为什么这么难？
 
 ## 0. 我们是怎么把 Agent 喂胖的
 
-ß把大模型看成一个函数：ß
+把大模型看成一个函数：
 
 ```
 Response = LLM(System_Prompt, History, Tools, Skills)
@@ -30,7 +30,7 @@ Response = LLM(System_Prompt, History, Tools, Skills)
 
 ## 1. 底层机制：模型只会「吐 token」
 
-所有 Agent——Claude Code、Codex、Cursor 还是自研 harness——内部模型永远只做一件事：**预测并输出下一个 token**。ß所谓调用工具，本质是模型在某时刻按约定格式吐出的一段结构化文本。
+所有 Agent——Claude Code、Codex、Cursor 还是自研 harness——内部模型永远只做一件事：**预测并输出下一个 token**。所谓调用工具，本质是模型在某时刻按约定格式吐出的一段结构化文本。
 
 一次请求长这样（简化）：
 
@@ -310,4 +310,4 @@ Moonshot 在 Kimi K3 的 API 里提供「动态加载工具」机制，思路是
 
 ### 4.4 这篇文章对我的修正
 
-读这篇文章之前，我对工具加载的理解停留在「全量注册 + 增大上下文窗口」的层面，顶多听说过「MCP 工具多了会挤占上下文」。最改变我看法的一点是：**工具动态加载的瓶颈不是检索算法，而是请求结构**——`tools` 数组在前缀里的位置决定了它与 Prompt Cache 的天然冲突，这个约束比「工具多不多」深刻得多。以后评估任何「工具按需加载」方案，我都会先问一句：它动了请求前缀吗？ß
+读这篇文章之前，我对工具加载的理解停留在「全量注册 + 增大上下文窗口」的层面，顶多听说过「MCP 工具多了会挤占上下文」。最改变我看法的一点是：**工具动态加载的瓶颈不是检索算法，而是请求结构**——`tools` 数组在前缀里的位置决定了它与 Prompt Cache 的天然冲突，这个约束比「工具多不多」深刻得多。以后评估任何「工具按需加载」方案，我都会先问一句：它动了请求前缀吗？
