@@ -3,7 +3,6 @@ title: macOS 应用推荐
 published: 2026-06-21
 description: 记录一下我觉得好用的 macOS 的应用
 tags: [macOS]
-image: 待定
 category: 待定
 draft: false
 ---
