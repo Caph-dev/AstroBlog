@@ -2,7 +2,11 @@
 title: MCP 新协议 vs 老协议：变化、取舍与 Agent 开发者的下一步
 published: 2026-08-01
 description: 从「握手 + 会话」到「无状态 + 每请求自述」：MCP 2026-07-28 更新同时改了连接、交互、扩展三个模型，这篇文章梳理变化脉络与取舍，以及对 Agent 应用开发者的具体启示。
-tags: [MCP, Agent, 协议演进, 无状态, MRTR, 工具调用]
+tags:
+  - MCP
+  - Agent
+  - MRTR
+  - 工具调用
 category: Agent
 draft: false
 ---
@@ -13,7 +17,7 @@ draft: false
 
 ## 开场：一个反直觉的事实
 
-老的能用，新的也能用——工具调用、资源读取、提示词，这些能力一个都没少，字段也兼容。但如果你只看「能做什么」，会完全错过这次更新的分量。真正变的是**一次 `tools/call` 意味着什么**：
+老的能用，新的也能用——工具调用、资源读取、提示词，这些能力一个都没少，字段也兼容。但如果你只看「能做什么」，会完全错过这次更新的分量。真正变的是**一次** `tools/call` **意味着什么**：
 
 在老协议里，一次工具调用默认发生在「一段已协商好的会话里」——双方握手时谈好了版本和能力，之后所有请求都活在这个语境的庇护下。在新协议里，这个语境没了：每个请求自己背着版本、能力和身份，服务端看这一次请求的内容独立决定接不接受。
 
@@ -43,15 +47,11 @@ MCP 的第一版规范发布于 2024-11-05；此后 Streamable HTTP 取代了旧
 
 *图 1：新旧消息流并排——Legacy（握手 + 会话）与 Modern（无状态 + 每请求自述）*
 
-![Legacy 消息流](/images/mcp-2026-update/1-legacy.png)
-
-![Modern 消息流](/images/mcp-2026-update/2-modern.png)
+Legacy 消息流Modern 消息流
 
 *图 2：同一个「部署前选环境」故事的两种讲法——Legacy 嵌套反向请求 vs Modern MRTR 重放*
 
-![Legacy：嵌套反向请求](/images/mcp-2026-update/3-nested.png)
-
-![Modern：MRTR 重放](/images/mcp-2026-update/4-replay.png)
+Legacy：嵌套反向请求Modern：MRTR 重放
 
 这里有个高频误解要先拆掉：**无状态 ≠ 业务不能有状态**。协议无状态禁止的是「靠连接记住版本、能力、身份」；业务状态（一个跑了 30 分钟的部署任务、一个购物车）完全可以放数据库、缓存或显式 handle 里，客户端每次把它当参数带回来。
 
@@ -91,20 +91,26 @@ MCP 的第一版规范发布于 2024-11-05；此后 Streamable HTTP 取代了旧
 
 ## 5. 一张对照总表
 
-| 主题 | 老协议（2025-11-25 及更早） | 新协议（2026-07-28） |
-| --- | --- | --- |
-| 协议版本 | `initialize` 阶段协商一次 | 每请求 `_meta` 声明；不支持返回 -32022 + supported |
-| 能力声明 | 初始化时保存双方 capabilities | 每次请求的 `_meta`；可选能力走 extensions 协商 |
-| 状态 | MCP session + 连接内状态 | 协议无状态；业务状态显式 handle/DB |
-| 用户输入 | Server 主动发请求（反向 RPC，嵌套） | `input_required` 中间结果；Client 补 `inputResponses` 后新 ID 重放（MRTR） |
-| 谁还能发 Request | Server 与 Client 都能 | 协议层只有 Client |
-| 长任务 | 核心实验性 tasks，阻塞取结果 | tasks 扩展：`tasks/get` 轮询 + task handle |
-| 订阅 | `resources/subscribe` | `subscriptions/listen` 长流 + subscriptionId |
-| 断线恢复 | SSE Last-Event-ID 重投 | 不恢复 in-flight；客户端新 ID 重发 → 副作用工具必须幂等 |
-| 传输 | HTTP+SSE（已弃用） | Streamable HTTP |
-| 日志 | `logging/setLevel` 按 session | 每请求 logLevel + stderr/OpenTelemetry |
+
+| 主题           | 老协议（2025-11-25 及更早）          | 新协议（2026-07-28）                                                |
+| ------------ | ---------------------------- | -------------------------------------------------------------- |
+| 协议版本         | `initialize` 阶段协商一次          | 每请求 `_meta` 声明；不支持返回 -32022 + supported                        |
+| 能力声明         | 初始化时保存双方 capabilities        | 每次请求的 `_meta`；可选能力走 extensions 协商                              |
+| 状态           | MCP session + 连接内状态          | 协议无状态；业务状态显式 handle/DB                                         |
+| 用户输入         | Server 主动发请求（反向 RPC，嵌套）      | `input_required` 中间结果；Client 补 `inputResponses` 后新 ID 重放（MRTR） |
+| 谁还能发 Request | Server 与 Client 都能           | 协议层只有 Client                                                   |
+| 长任务          | 核心实验性 tasks，阻塞取结果            | tasks 扩展：`tasks/get` 轮询 + task handle                          |
+| 订阅           | `resources/subscribe`        | `subscriptions/listen` 长流 + subscriptionId                     |
+| 断线恢复         | SSE Last-Event-ID 重投         | 不恢复 in-flight；客户端新 ID 重发 → 副作用工具必须幂等                           |
+| 传输           | HTTP+SSE（已弃用）                | Streamable HTTP                                                |
+| 日志           | `logging/setLevel` 按 session | 每请求 logLevel + stderr/OpenTelemetry                            |
+
+
+
 
 ## 6. 对 Agent 应用开发者的启示
+
+
 
 ### 6.1 心智模型：从「调用工具」到「编排工作流」
 
@@ -117,12 +123,14 @@ MCP 的第一版规范发布于 2024-11-05；此后 Streamable HTTP 取代了旧
 对照自查，缺哪条补哪条：
 
 1. **时代探测与回退**：stdio 下先 `server/discover`；HTTP 下发现代请求并检查错误 body。关键判断：收到 -32022 说明对端是 Modern，换版本重试，**不要**误回退到 initialize。
-2. **每请求 `_meta`**：构造 `protocolVersion`、`clientCapabilities`、clientInfo。
-3. **`complete` / `input_required` 状态机**：持久化 pending 状态；设最大轮次与超时（规范允许连续多轮 `input_required`，不设上限就是死循环）；accept / decline / cancel 三路分别处理。
+2. **每请求** `_meta`：构造 `protocolVersion`、`clientCapabilities`、clientInfo。
+3. `complete` **/** `input_required` **状态机**：持久化 pending 状态；设最大轮次与超时（规范允许连续多轮 `input_required`，不设上限就是死循环）；accept / decline / cancel 三路分别处理。
 4. **Elicitation UI**：表单渲染；URL 模式展示完整域名并征得同意；敏感数据保护。
 5. **Tasks 轮询与取消**：按 `capabilities.extensions` 决定启用，不支持则降级。
-6. **`subscriptions/listen` 重连**：断线后重新订阅，不能指望自动补发。
+6. `subscriptions/listen` **重连**：断线后重新订阅，不能指望自动补发。
 7. **副作用工具的幂等**：这是最容易爆生产事故的一条，见 6.3。
+
+
 
 ### 6.3 状态与安全：无状态协议的两道新考题
 

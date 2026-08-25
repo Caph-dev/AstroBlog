@@ -3,7 +3,7 @@ title: 草稿示例
 published: 2022-07-01
 tags: [Markdown, 博客, 演示]
 category: Examples
-draft: true
+draft: false
 ---
 
 # 这是一篇草稿文章
@@ -21,3 +21,4 @@ category: Examples
 draft: false
 ---
 ```
+

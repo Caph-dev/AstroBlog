@@ -2,7 +2,11 @@
 title: 是时候精简你的 AGENTS.md 了——By 渐进式披露
 published: 2026-05-28
 description: 用 agents-progressive-disclosure skill 把膨胀的 AGENTS.md 重构成精简路由入口与按需加载的专项文档。
-tags: [开源, Agent, AGENTS.md, 渐进式披露, Cursor, Codex]
+tags:
+  - Agent
+  - AGENTS.md
+  - 渐进式披露
+  - Skills
 category: Agent
 draft: false
 ---
@@ -82,13 +86,15 @@ skill 会引导 agent 完成以下流程：
 
 入口文件通常包含这几块：
 
-| 模块 | 内容 |
-|------|------|
-| 适用范围 | 说明这是全局还是项目级入口 |
-| 常驻原则 | 必须始终遵守的高频规则 |
-| 按需读取索引 | 任务类型 → 对应文档的路由表 |
-| 常驻安全边界 | 破坏性操作、权限等底线规则 |
-| 优先级 | 用户指令 > 项目 AGENTS.md > 全局 AGENTS.md > docs 细则 |
+
+| 模块     | 内容                                           |
+| ------ | -------------------------------------------- |
+| 适用范围   | 说明这是全局还是项目级入口                                |
+| 常驻原则   | 必须始终遵守的高频规则                                  |
+| 按需读取索引 | 任务类型 → 对应文档的路由表                              |
+| 常驻安全边界 | 破坏性操作、权限等底线规则                                |
+| 优先级    | 用户指令 > 项目 AGENTS.md > 全局 AGENTS.md > docs 细则 |
+
 
 下面是我 Codex 全局 `AGENTS.md` 的简化示例（完整版见 [GitHub 仓库](https://github.com/Caph-dev/agents-progressive-disclosure)）：
 
@@ -121,6 +127,8 @@ skill 会引导 agent 完成以下流程：
 4. 本文件路由到的 `docs/*.md` 细则
 ```
 
+
+
 ## 好处
 
 1. **AGENTS.md 保持精简**——入口文件只承担路由职责
@@ -132,6 +140,8 @@ skill 会引导 agent 完成以下流程：
 
 ## 常见问题
 
+
+
 ### Agent 一定会去读对应的 docs 吗？
 
 坦白说，**不能保证 100%**。大模型是概率系统，强模型大多会遵守读取规则，但偶发忽略也是可能的。
@@ -141,6 +151,8 @@ skill 会引导 agent 完成以下流程：
 - 在路由表里写清楚触发条件，而不是只列文件名
 - 对 plan / code / review 等不同阶段分别指定要加载的规则
 - 更进一步：用 **hooks 强制注入**索引，在任务开始时把相关文档片段自动塞进上下文
+
+
 
 ### 常用规则要不要也放到 docs 里？
 
