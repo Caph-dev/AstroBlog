@@ -1,6 +1,6 @@
 ---
 title: Tools 的渐进式披露为什么这么难？
-published: 2026-08-25
+published: 2026-08-08
 description: 从 Provider 原生、客户端折中到协议改造，盘点业界实现工具渐进式加载的四种方案，以及「初始无 N 个工具、前缀缓存稳定、原生严格 schema」三个目标只能取二的取舍。
 tags: [Agent, Tools, 渐进式披露, Prompt Cache, Claude Code]
 category: Agent
