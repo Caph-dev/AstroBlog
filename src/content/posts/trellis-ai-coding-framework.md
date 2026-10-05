@@ -1,7 +1,8 @@
 ---
-title: Trellis：从 vibe coding 到 spec coding 的工程化实践
+title: Trellis 把项目规范留在仓库里
 published: 2026-07-18
-description: 本文对 AI 编码从「随性发挥」转向「规范驱动」的过程作一次技术性梳理：先分析 vibe coding 的三类问题，再以 Agent = Model + Harness 的拆解说明规范层的作用，随后介绍 Trellis 的定位、核心概念与完整任务流程，并与其他几类 harness 方案对比，最后给出适用场景、使用成本与部署要点。
+updated: 2026-10-04
+description: 对照官方文档，说明 Trellis 怎样把 spec、任务和会话记录放进仓库，以及什么项目用了会更慢。
 tags:
   - Trellis
   - Coding Agent
@@ -11,150 +12,102 @@ category: Agent
 draft: false
 ---
 
-# Trellis：从 vibe coding 到 spec coding 的工程化实践
+# Trellis 把项目规范留在仓库里
 
-## 1. 背景：vibe coding 的三类问题
+我把 Trellis 的安装文档、spec 写法说明和 npm 上的介绍对了一遍。它要管的事情很小，也很具体。你换一个会话，模型不记得上次为什么把错误写成那种 JSON，也不记得登录失败该返回哪几个字段。
 
-vibe coding 指把需求交给 AI、由它自主完成编码的工作方式。在模型能力足够强、任务足够简单时，这种方式效率很高。但项目一旦进入长期维护，就会持续受到三类问题的困扰。
+npm 上的介绍把这件事说得很直接。模型写代码很快，换一个会话就忘了这个仓库里已经定过的约定。Trellis 把 spec、任务和会话记录放进仓库，让不同的编码工具读同一套东西。包名是 `@mindfoldhq/trellis`。
 
-**其一，输出不稳定。** 同一项需求，在不同会话里可能得到风格迥异的实现。代码是否遵循 lint、是否使用类型、命名是否统一，取决于当次对话的上下文，难以预测。
+## 会话里丢掉的是哪几样东西
 
-**其二，上下文随会话丢失。** 新会话开始时，AI 不记得上一次完成了什么，也不记得项目里已经约定过的规则。开发者需要反复解释相同的内容，协作成本随之上升。
+同一句需求，两次会话可以写出两套风格。lint 守不守、类型写不写、命名跟不跟仓库里已有的走，看这次上下文里有没有人提过。
 
-**其三，规范散落在代码库之外。** 项目的约定通常存在于 PR 评论、即时通讯消息和资深成员的记忆里，AI 无法读取，只能依据自身的通用习惯进行编码，而这些习惯往往与团队的实际约定不一致。
+新会话一开始，模型不知道上次做到哪，也不知道仓库里已经写过的规矩。你得再讲一遍。
 
-由此得出的一个基本判断是：**值得长期积累的资源不是代码本身，而是规范。**
+那些规矩常常不在仓库里。它们在 PR 评论、聊天记录和某个人脑子里。模型读不到，就按自己的习惯写，而它的习惯多半跟你们上次吵完留下的约定不一样。
 
-## 2. Agent = Model + Harness
+值得留下来的，经常是这些规矩。代码可以重写。错误格式、目录怎么分、哪个模块不能直接调用哪个模块，重写一次就容易写歪。
 
-可以把一个 AI agent 拆成两个部分来理解。
+## 模型外面还要有一份项目事实
 
-- **Model**：模型本身，负责理解、推理以及代码生成。
-- **Harness**：模型之外的一整套工程规范，包括项目规范存放在哪里、任务状态如何管理、上下文如何注入、经验如何沉淀、工具如何调用、边界如何划定。
+模型负责理解和写代码。几个月前为什么这么设计，它读不到，除非这些话写在它每次都能打开的文件里。
 
-现有讨论大多把注意力集中在 Model 一侧。但在实际项目中，Model 再强也无法得知几个月前团队为何作出某项设计决策。这类「项目事实」只能由 Harness 一层承载。
+常见的补法各自有缺口。
 
-## 3. prompt / rules / skill 的局限
+prompt 停在这一次对话里。会话结束，内容就没了。下次要么重说，要么让它看 diff 猜。diff 能看出改了哪几行，看不出当时为什么这样改。
 
-为约束 AI 的行为，通常会维护规则类资源，但单独使用其中某几样都存在明显局限。
+规则文件能跨过会话，但各跟各的工具走。`AGENTS.md`、`CLAUDE.md`、`.cursorrules` 换到另一个工具往往用不上。文件还会越写越长，旧条文舍不得删，模型读到后面抓不住眼下这次要守的那几条。它也不知道任务走到哪一步。
 
-- **prompt 不持久。** 会话结束后内容即消失，新会话需要重新说明，或让 AI 通过对比代码 diff 来推断上下文。这不仅消耗 token，也无法保证 AI 真正理解了既定的规范。
-- **规则文件因工具而异。** `AGENTS.md`、`CLAUDE.md`、`.cursorrules` 等文件虽可持久生效，但 `.cursorrules` 属于 cursor、`CLAUDE.md` 属于 claude code，切换工具就需要重新配置。团队若混用多种工具，无法统一管理这些约束；当某个工具被限制使用时，对应的配置也会失效。
-- **规则文件会不断膨胀。** 新的规则持续加入，旧的规则又难以删除，最终文件过长，AI 读取时容易上下文过载，反而抓不住重点。此外，规则本质上是静态的，不知道当前任务进行到哪一步。
+Trellis 把这几样拆开，放进仓库。
 
-核心问题因此不在于「是否需要有规范」，而在于规范能否跨会话、跨工具、跟随任务走，并且能被反复校验与更新。
+规范在 `.trellis/spec/`，分成 frontend、backend、guides。每个目录用 `index.md` 当入口，细节另写文件再链过去。文档要求写具体，带上文件路径，最好贴项目里已经在用的写法。只写「注意错误处理」，模型不知道该去看哪个文件。
 
-## 4. Trellis 的定位与核心概念
+每个人的会话记录在 `.trellis/workspace/{名字}/journal-N.md`。官方说，SessionStart hook 或者平台自己的 prelude 会读 journal 和当前任务列表，新会话才能接上一次做到哪、对应哪次提交。
 
-Trellis 的解决思路，是把若干组件串成一条「项目级闭环」：**spec（规范）、task（任务）、workspace / journal（记忆）、workflow-state（运行状态）、jsonl（上下文配置）、finish / update-spec（收尾与沉淀）**。
+任务在 `.trellis/tasks/`。一个任务目录里有 `task.json` 和 `prd.md`。复杂任务再加 `design.md`、`implement.md`，以及 `implement.jsonl`、`check.jsonl`。这两份 jsonl 只记要读的 spec 和 research 路径，文档写明不要把源码路径塞进去。做完的任务进 `.trellis/tasks/archive/`，按年月分目录。
 
-它关注的重点不是某个命令是否好用，而是项目能否形成一套可供 AI 读取、可追溯、可持续演进的事实来源。也就是说，让 AI 在新会话中自行恢复「当前项目、项目规范、上次进行到何处」这三类信息。
+流程说明在 `.trellis/workflow.md`。`.trellis/` 这一套各平台共用。命令、hook、子代理怎么装，则按 cursor、claude、codex 各自写到自己的配置目录。
 
-Trellis 定义了四个跨平台一致的核心概念：
+## 文档里的登录功能是怎么走完的
 
+官方用加一个用户登录来举例。我按安装文档里的步骤复述，不是我自己跑过的某次记录。
 
-| 概念             | 路径                    | 说明                                                                    |
-| -------------- | --------------------- | --------------------------------------------------------------------- |
-| Spec（规范）       | `.trellis/spec/`      | 以 Markdown 记录的编码规约，按模块划分（frontend / backend / guides），AI 在改动前读取       |
-| Workspace（工作区） | `.trellis/workspace/` | 每位开发者的会话日志（journal），用于维持跨会话的上下文连贯                                     |
-| Task（任务）       | `.trellis/tasks/`     | 工作单元，包含 PRD、上下文配置与子任务，生命周期为创建 → 规划 → 执行 → 验证 → 归档                     |
-| Skill（技能）      | `.agents/skills/`     | 自动触发的工作流模块：brainstorm / before-dev / check / update-spec / break-loop |
+你说要加登录。模型先判断这次够不够单独建任务。闲聊和改动很小的事，不会自动建。够复杂，它会先问你同不同意建，同意了才进入规划。`task.py create` 建出目录和默认的 `prd.md`，brainstorm 一次只问一个问题，答案写回这份 PRD。登录失败怎么返回、token 过期怎么办、要不要第三方登录，当时没问，实现时就会各写各的。复杂任务会补设计和实现计划，要查的资料放进 `research/`。你看过以后，`task.py start` 把状态改成进行中。
 
+写代码时读的是 `prd.md`、这次用得到的 spec，有设计文档就一起读。spec 按任务挑，不会把十几份模板一次灌进提示词。`trellis init` 会先放下大约 17 个占位文件，分布在 backend、frontend、guides，题目覆盖目录、错误处理、日志、组件。占位文件本身几乎没信息。文档让你先做 bootstrap 任务 `00-bootstrap-guidelines`，再用自带的 `trellis-spec-bootstrap`，让模型从现有代码里起草第一版，然后你自己看质量。空模板就开写业务，模型读到的还是套话。
 
+检查时看 diff，对照 `check.jsonl` 里点名的 spec 和 research，再跑 lint、类型检查和测试。接口的错误格式、漏掉的权限校验、依赖方向写反，lint 经常看不见。spec 里如果写了「错误都走 `src/lib/errors.ts` 的 AppError，别直接抛普通 Error」，这一步才有东西可对。
 
+收尾时，update-spec 只把以后还要遵守的写法写进 `.trellis/spec/`。某次把登录路径改成某个具体 URL，留在任务记录里就够了。业务代码先按你点头的批次提交。提交已经在了，再跑 `/trellis:finish-work`。这个命令用 `add_session.py` 追加一条 journal。任务确实做完、验收也过了，它再通过 `task.py archive` 把任务目录挪进归档。
 
-## 5. 一个需求的完整流程
+模型停住，或者跳步，文档让你跑 `/trellis:continue`。它看任务状态、目录里已经有哪些文件，以及每轮带上的 workflow-state，判断下一步该加载哪一段流程。
 
-把各个环节串联起来，一个需求从描述到收尾的执行过程如下。
+## 和另外几类做法比，它把力气花在仓库里
 
-1. **会话启动。** 恢复项目上下文，并在每轮对话中向提示词注入 workflow-state。
-2. **判断是否建立 task。** 若只是单个技术问题或改动很小，直接在当前对话中处理即可；只有涉及多文件、多模块、需要设计与复盘时，才建议创建 task。Trellis 因此不会把所有事务都流程化。
-3. **Planning。** 将临时需求整理成可持续推进的任务资产。例如只描述「做一个登录功能」，它会先明确登录失败如何处理、token 过期策略、是否支持第三方登录、旧用户数据如何兼容等问题，并写入 `prd.md`。后续新会话可直接读取。
-4. **Execute。** 实现时依据任务资产与按需读取的相关 spec，而非仅依据最后一句 prompt。spec 不会一次性全部注入，而是按任务需要选取，比单个超长规则文件更易维护。
-5. **Check。** 这一步相当于一次小型代码审查：查看 diff，读取 `check.jsonl` 中声明的 spec / research，再对照规范检查。接口错误格式不符合约定、权限校验遗漏、依赖方向错误等问题，通常难以被 lint 或单测发现。
-6. **Update-spec。** 判断是否有经验值得沉淀。需要避免把所有内容都写入 spec——spec 若收录一切，将沦为信息杂乱的文件。只有具备长期复用价值的规则才应写入，例如「某类接口必须统一错误格式」「某一模块不得直接依赖另一模块」；而像「登录接口改为 /api/v2/login」这类信息，保留在 task 中即可。
-7. **Finish-work。** 归档任务并写入 journal。该命令不会提交业务代码——功能代码需先完成 commit，它只处理 `.trellis/` 内部的归档与 journal；若存在未提交的业务改动，会拒绝执行。
+下面是我自己的归类，拿来看 Trellis 把力气放在哪，不是官方排行。
 
-综合来看，Trellis 的落点已从「AI 能否写出代码」转移到「AI 写代码时是否具备稳定的项目上下文、任务状态、检查标准与收尾机制」。
+superpowers 那一类把步骤卡得很死。先问清，再做计划，再按测试往下写，最后审查。模糊的想法会被问成能执行的计划。小任务也会被反复问、反复审。做完以后，经验还在对话里。仓库里没有 task、spec 和 journal 接着存。
 
-## 6. 与其他 harness 方案的对比
+openspec 那一类先写 spec 再实现。变更围绕 proposal、spec、design、tasks 走，适合规则多、要改很久的系统。规范写出来以后，模型这次读没读、读的是不是这一份、写的时候守不守，还得另有办法盯着。任务现在走到哪、换一个工具以后还记不记得，不是它主要要管的事。
 
-现有方案没有绝对优劣，区别主要在于设计取向，大致可分为四类。
+oh-my-claudecode 那一类把规划、实现、审查、排错拆成多个 agent。任务一大，这样分得开。agent、技能和 hook 一多，一个小需求也会被编排得很重。出了问题，更难查是哪一个环节偏了。
 
-- **流程强化型**，以 superpowers 为代表。强调 AI 的执行流程：先澄清、再计划、TDD、最后审查。价值在于把模糊想法整理成可执行计划。问题在于流程重，小任务反复追问与审查会较繁琐；且没有项目级的 task / spec / journal 支撑，流程结束后经验仍散落在对话记录中。
-- **规范管理型**，以 openspec 为代表。采用 spec-first，先对齐后实现，变更围绕 proposal、spec、design、tasks 推进，适合复杂需求与长期系统。但规范生成后，AI 是否每次读取、是否读对、是否遵守，仍需要额外机制保障；任务状态、工作记忆与平台适配并非其重点。
-- **多 Agent 编排型**，以 oh-my-claudecode 为代表。将 planner、executor、reviewer、debugger 拆分为多个 agent。适合复杂任务，但编排层越重，agent、skills、hooks 越多，排查成本越高，简单任务容易过度编排。
-- **项目闭环型**，以 Trellis 为代表。将规范、任务、workflow-state、jsonl、journal 以及 finish / update-spec 串成项目级闭环，重点在于全链路落地：规范如何沉淀、任务如何追踪、会话如何接续、经验如何回流、不同工具如何共享同一套项目上下文。
+Trellis 把 spec、任务、每轮的 workflow-state、jsonl、journal，还有 finish 和 update-spec，放在同一个仓库结构里。换会话、换工具以后，还能不能读到同一份项目事实，是它主要在答的问题。
 
+## 什么项目用了会更烦
 
+一次性脚本，比如一个油猴脚本，直接让模型写完就行。没有长期维护的仓库，建任务、写 PRD、回头改 spec，都是额外的时间。两三个人如果没人愿意改 spec，仓库里会留下空模板和过时约定。模型照着过时的写，比没有 spec 更糟。
 
-## 7. 适用场景与使用成本
+装之前先看运行环境。Mac、Linux、Windows 都支持，需要 Node.js 18 以上，还要 Python 3.9 以上。你得分得清 `.trellis/spec/`、`tasks/`、`workspace/`、`workflow.md`、`.runtime/` 各管什么，不然看不懂模型为什么忽然去改某一份 markdown。节奏也变了。vibe coding 是边说边写。这里先问清，写完再检查，最后才收尾。小任务会显得慢。
 
-Trellis 提供的是工程结构，并非免维护的自动化能力——spec 需要人工编写、更新与清理。以下场景不宜使用：
+技术栈和目录一变，spec 要跟着改。过时的 spec 会把模型带偏。任务拆得太碎，就只剩流程。太大，模型又会在一堆文件里迷路。适合单独建任务的，是得复盘、牵涉多个文件或多个决定、而且你希望下次还能打开看的那些。
 
-- 一次性脚本（如油猴脚本），直接以 vibe 方式完成即可，无需复杂化。
-- 没有长期维护价值的项目，追求速度时，创建 task、编写 PRD、沉淀经验反而是负担。
-- 团队不愿维护 spec 时。成员较少（两三人）的小团队强行使用，容易留下空模板或过时规范，反而更乱。
+平台能力也不齐。`trellis init` 可以按 `--cursor`、`--codex`、`--claude` 这些旗标装适配层，核心目录相同，hook 和子代理则看平台给不给。Codex 靠仓库根上的 `AGENTS.md`，再加上 `UserPromptSubmit` hook。你得在 `~/.codex/config.toml` 里打开 hook，0.129 及以后写 `hooks = true`，更早的版本写 `codex_hooks = true`。不打开的话，聊天里输入 `/` 看不到这些命令，workflow-state 也不会自动注入。文档还说，每个要用的平台至少 init 一次。`/trellis:start` 主要留给没有 agent 的平台，文档点名的是 Kilo、Antigravity、Devin。支持 SessionStart 的，打开终端时已经读过 journal。
 
-适用场景为：项目需长期维护、业务规则较多、多人协作、经常更换 AI 工具、希望经验进入仓库。
+个人仓库也会碰到同样的断档。项目搁几个月，人自己也常常不记得上次为什么这样分目录。从 claude code 换到 codex 或 cursor，规则文件通常要重写，`.trellis/` 不用重写。同时养着几个仓库时，比如一个 Go 后端、一个 React 前端，各自的 spec 待在各自的目录里，模型不容易把上一个仓库的约定带过来。当时的取舍如果只在聊天记录里，记录一压缩就找不回。任务和 spec 进了 git，至少还有一份能打开的说明。
 
-使用成本同样需要评估：
+团队更直接的好处，是人不必用同一个工具。有人用 cursor，有人用 claude code，新人用 codex，读的是同一份 `.trellis/`。
 
-1. 需先理解 `.trellis/` 下 spec / tasks / workspace / workflow.md / .runtime 各自的职责，否则难以判断 AI 的行为。
-2. 需适应 plan / execute / finish 的节奏。vibe 是边说边写，Trellis 是先澄清、再实现、再检查、再收尾，更稳妥但更慢，小任务使用会较繁琐。
-3. spec 需要维护。技术栈、架构、约定变化时须同步更新，过时的 spec 会误导 AI。
-4. task 颗粒度需控制。过大则 AI 易迷失，过小则成为流程负担。合适的粒度是任务确需复盘、涉及多个文件或多个决策、且希望后续能继续查看。
-5. 平台体验存在差异。官方支持平台较多，但各平台的 hook、command、sub-agent 能力不同，能接入与体验完整是两回事。
+## 哪些文件进 git
 
+按官方目录，`.trellis/spec/`、`.trellis/tasks/`、`.trellis/workspace/` 里的 journal 应该进仓库。`.trellis/.developer` 是当前这份检出上的开发者名字，设计上不提交。新克隆出来的仓库没有这个文件，Trellis 拿它判断是不是新同事第一次打开。`.trellis/.runtime/` 记的是这一次会话正在做哪个任务，也不提交。
 
+spec 和 task 进了 git，规范改动就可以走 PR。别人能看见错误格式和依赖方向是什么时候定的。
 
-## 8. 对个人与团队的价值
-
-个人项目同样会遭遇与团队类似的问题：
-
-- **会话失忆。** 项目搁置数月后，无法回忆上次进度与设计原因，需要重新翻阅代码与对话记录。
-- **工具切换。** 从 claude code 切换到 codex、cursor 时，之前配置的规范需要重新编写。
-- **多项目混乱。** 同时维护多个项目（如 Go 后端、React 前端、静态博客）时，规范各不相同；在同一个 agent 工具中来回切换，AI 容易受到上一段上下文的影响。
-- **决策不可追溯。** 当时按临时想法完成的代码，数月后难以判断原始设计意图，相关权衡与取舍只存在于聊天记录中，且多已压缩，无法追溯。
-
-spec coding 对个人的价值，在于完成任务的顺手保留必要文档，为后续续接留下线索。
-
-团队场景下的价值更为明显：**成员可以不必统一使用同一工具。** Trellis 采用「核心跨平台、适配层各自独立」的设计——有人用 cursor、有人用 claude code、新人用 codex，可以共享同一套 `.trellis/` 上下文。
-
-## 9. git 目录划分
-
-哪些内容应纳入版本管理，建议如下：
-
-- **纳入 git**：`.trellis/spec/`（团队规范，与代码一样走 PR 审查）、`.trellis/tasks/`（任务目录，属于项目资产）、`.trellis/workspace/{name}/`（各开发者的 journal）。
-- **置于 gitignore**：`.trellis/.developer`（当前开发者名）、`.trellis/.runtime/`（会话运行时状态）。
-
-将 spec 和 task 纳入 git，意味着规范变更需要像代码一样经过审查，重要的 API 设计、测试约定与架构约束对团队可见、可讨论；会话级临时状态则无需纳入版本控制。任务目录纳入 git 后可能存在冲突，建议通过 `--assignee` 明确负责人。
-
-## 10. 安装与初始化
-
-安装与初始化操作简单：
+## 装上以后先填 spec
 
 ```bash
 npm install -g @mindfoldhq/trellis@latest
 cd your-project && trellis init -u your-name
 ```
 
-初始化后应先完成 bootstrap 任务，让 AI 从真实代码中提取第一版 spec，否则 `.trellis/spec/` 中多为空模板，读取价值有限。
+不写 `-u` 时，文档说会用 `git config user.name`。只想装某几个平台，可以写成 `trellis init --cursor --codex -u your-name`。
 
-若使用 codex，需要在 `~/.codex/config.toml` 中开启 hook，并在 TUI 中执行一次 `/hooks`，批准 Trellis 安装的 `UserPromptSubmit` hook；否则 `/` 菜单可能不显示 Trellis 命令，workflow-state 也不会自动注入。
+init 之后先做 bootstrap，别让模型对着空模板写业务代码。日常直接说需求，由它判断这次要不要建任务。它问能不能建，你确认就行。卡住了用 `/trellis:continue`。业务提交已经在了，再用 `/trellis:finish-work` 写 journal。
 
-日常使用时无需预先判断是否建立 task，直接在对话中描述需求，由 Trellis 与 AI 判断；询问是否创建 task 时确认即可。常用命令有三个：
+## 来源
 
-- `/trellis:start`：少数平台需要手动启动上下文时使用；支持 SessionStart hook 的平台在打开终端时已自动完成初始化。
-- `/trellis:continue`：最常用，当前任务规划、实现或检查完成后，用于推进下一步。
-- `/trellis:finish-work`：任务收尾，需先 commit 功能代码，再执行归档 task 与写入 journal。
-
-
-
-## 11. 结语
-
-vibe coding 在脚本编写与个人项目中具有明显效率优势。但项目进入长期维护后，需要解决规范保存、任务接续、经验沉淀以及新会话上下文恢复等问题。
-
-Trellis 将这些「项目事实」组织为可供 AI 读取、可供团队审查、并可持续演化的结构。是否采用取决于项目情况与使用习惯：对临时需求与小项目而言，并无必要。
-
-详细说明可参考官方文档：**[Trellis 官方文档](https://docs.trytrellis.app/zh)**
+- [Trellis 安装与第一个任务](https://docs.trytrellis.app/start/install-and-first-task)
+- [Trellis 快速开始](https://docs.trytrellis.app/quickstart)
+- [怎样写 spec](https://docs.trytrellis.app/guides/specs)
+- [npm 上的 Trellis](https://www.npmjs.com/package/@mindfoldhq/trellis)

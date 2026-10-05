@@ -3,10 +3,15 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url-utils.ts";
 
+function includePost(id: string, data: { draft?: boolean }) {
+	if (id.startsWith("归档/")) return false;
+	return import.meta.env.PROD ? data.draft !== true : true;
+}
+
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
-	const allBlogPosts = await getCollection("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
+	const allBlogPosts = await getCollection("posts", ({ id, data }) => {
+		return includePost(id, data);
 	});
 
 	const sorted = allBlogPosts.sort((a, b) => {
@@ -52,8 +57,8 @@ export type Tag = {
 };
 
 export async function getTagList(): Promise<Tag[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
+	const allBlogPosts = await getCollection<"posts">("posts", ({ id, data }) => {
+		return includePost(id, data);
 	});
 
 	const countMap: { [key: string]: number } = {};
@@ -79,8 +84,8 @@ export type Category = {
 };
 
 export async function getCategoryList(): Promise<Category[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
+	const allBlogPosts = await getCollection<"posts">("posts", ({ id, data }) => {
+		return includePost(id, data);
 	});
 	const count: { [key: string]: number } = {};
 	allBlogPosts.forEach((post: { data: { category: string | null } }) => {
