@@ -1,113 +1,163 @@
 ---
-title: Trellis 把项目规范留在仓库里
+title: Trellis：Spec-Driven Development 框架
 published: 2026-07-18
-updated: 2026-10-04
-description: 对照官方文档，说明 Trellis 怎样把 spec、任务和会话记录放进仓库，以及什么项目用了会更慢。
+description: 给团队同事的一篇介绍：Trellis 想解决什么问题，它怎样用 hook 自动注入上下文、让团队共享规范、让 AI 跨会话记住项目，以及上手前该知道的代价。
 tags:
   - Trellis
-  - Coding Agent
   - Spec
+  - Coding Agent
   - harness
 category: Agent
 draft: false
 ---
 
-# Trellis 把项目规范留在仓库里
+# Trellis：Spec-Driven Development 框架
 
-我把 Trellis 的安装文档、spec 写法说明和 npm 上的介绍对了一遍。它要管的事情很小，也很具体。你换一个会话，模型不记得上次为什么把错误写成那种 JSON，也不记得登录失败该返回哪几个字段。
+最近我在用 Trellis，用下来觉得值得跟大家讲一讲。
 
-npm 上的介绍把这件事说得很直接。模型写代码很快，换一个会话就忘了这个仓库里已经定过的约定。Trellis 把 spec、任务和会话记录放进仓库，让不同的编码工具读同一套东西。包名是 `@mindfoldhq/trellis`。
+先说我们大概都碰到过的几件事。同一个需求，今天让 AI 写一遍，明天换个会话再写一遍，风格能差很多。新开一个会话，上次聊好的约定它全忘了，得再讲一遍。还有团队里那些不成文的规矩，比如错误怎么返回、目录怎么分，都在 PR 评论和老同事脑子里，AI 看不到，只能按它自己的习惯来写。
 
-## 会话里丢掉的是哪几样东西
+Trellis 想解决的就是这几件事。它的做法也不复杂：把规范、任务、会话记录都放进仓库，再用 hook 在合适的时候把它们送到 AI 面前。
 
-同一句需求，两次会话可以写出两套风格。lint 守不守、类型写不写、命名跟不跟仓库里已有的走，看这次上下文里有没有人提过。
+官网的说法是，AI 的能力像藤蔓一样生长，充满活力但四处蔓延，Trellis 是给它搭的脚手架（trellis 本来就是花架的意思），引导它沿着你们定的路径走。
 
-新会话一开始，模型不知道上次做到哪，也不知道仓库里已经写过的规矩。你得再讲一遍。
+## 它长什么样
 
-那些规矩常常不在仓库里。它们在 PR 评论、聊天记录和某个人脑子里。模型读不到，就按自己的习惯写，而它的习惯多半跟你们上次吵完留下的约定不一样。
+装好之后，仓库里会多一个 `.trellis/` 目录，里面主要三样东西：
 
-值得留下来的，经常是这些规矩。代码可以重写。错误格式、目录怎么分、哪个模块不能直接调用哪个模块，重写一次就容易写歪。
+| 目录 | 放什么 |
+| --- | --- |
+| `.trellis/spec/` | 团队的编码规范，Markdown 写的，按 frontend、backend、guides 分文件 |
+| `.trellis/tasks/` | 一个任务一个目录，里面有需求文档 `prd.md`，复杂任务还有设计和实施计划 |
+| `.trellis/workspace/` | 每个开发者自己的会话日志（journal） |
 
-## 模型外面还要有一份项目事实
+此外还有 `.trellis/workflow.md`，写的是整个工作流怎么走。这些东西都是普通文件，能 diff、能 review、能进 git。
 
-模型负责理解和写代码。几个月前为什么这么设计，它读不到，除非这些话写在它每次都能打开的文件里。
+`.trellis/` 这一套不绑定某个 AI 工具。Cursor、Claude Code、Codex、OpenCode 这些，加起来官方列了 20 多个平台，各自在自己的配置目录里装一层适配（hook、命令、子代理），读的是同一个 `.trellis/`。
 
-常见的补法各自有缺口。
+## 一个会话是怎么跑的
 
-prompt 停在这一次对话里。会话结束，内容就没了。下次要么重说，要么让它看 diff 猜。diff 能看出改了哪几行，看不出当时为什么这样改。
+先看一次完整的流程，后面讲的设计点基本都在这张图里。
 
-规则文件能跨过会话，但各跟各的工具走。`AGENTS.md`、`CLAUDE.md`、`.cursorrules` 换到另一个工具往往用不上。文件还会越写越长，旧条文舍不得删，模型读到后面抓不住眼下这次要守的那几条。它也不知道任务走到哪一步。
+![Trellis 一次完整会话的协作流程：开发者、AI 主会话、Hook、.trellis/ 和 implement/check 子代理之间的交互](https://imgbed.caph.me/file/1791913559510_image.png)
 
-Trellis 把这几样拆开，放进仓库。
+整体分三段：Plan、Execute、Finish。`workflow.md` 里把每一段该做什么、怎么切换写得很具体。
 
-规范在 `.trellis/spec/`，分成 frontend、backend、guides。每个目录用 `index.md` 当入口，细节另写文件再链过去。文档要求写具体，带上文件路径，最好贴项目里已经在用的写法。只写「注意错误处理」，模型不知道该去看哪个文件。
+几个细节我觉得挺实在：
 
-每个人的会话记录在 `.trellis/workspace/{名字}/journal-N.md`。官方说，SessionStart hook 或者平台自己的 prelude 会读 journal 和当前任务列表，新会话才能接上一次做到哪、对应哪次提交。
+- 要不要建任务，AI 会先问你。简单问答、小改动可以直接做，不会为了走流程硬建任务。
+- 同意建任务，不等于同意开始写代码。中间还有一次需求和方案的确认，确认完才进入实现。
+- 实现完有 `trellis-check` 来复核，它不只是报告问题，能修的会直接修，修完再跑一遍检查。
+- commit 是主会话先列一个分批计划，你点头一次，它再提交。`finish-work` 只负责归档和写 journal，不碰业务代码。
 
-任务在 `.trellis/tasks/`。一个任务目录里有 `task.json` 和 `prd.md`。复杂任务再加 `design.md`、`implement.md`，以及 `implement.jsonl`、`check.jsonl`。这两份 jsonl 只记要读的 spec 和 research 路径，文档写明不要把源码路径塞进去。做完的任务进 `.trellis/tasks/archive/`，按年月分目录。
+## 几处设计上的巧思
 
-流程说明在 `.trellis/workflow.md`。`.trellis/` 这一套各平台共用。命令、hook、子代理怎么装，则按 cursor、claude、codex 各自写到自己的配置目录。
+### Hook：该给的上下文自动给
 
-## 文档里的登录功能是怎么走完的
+规范写得再好，要靠人每次记得去贴，迟早会漏。Trellis 的思路是别靠人。
 
-官方用加一个用户登录来举例。我按安装文档里的步骤复述，不是我自己跑过的某次记录。
+在支持 hook 的平台上，有三个时机会自动注入：
 
-你说要加登录。模型先判断这次够不够单独建任务。闲聊和改动很小的事，不会自动建。够复杂，它会先问你同不同意建，同意了才进入规划。`task.py create` 建出目录和默认的 `prd.md`，brainstorm 一次只问一个问题，答案写回这份 PRD。登录失败怎么返回、token 过期怎么办、要不要第三方登录，当时没问，实现时就会各写各的。复杂任务会补设计和实现计划，要查的资料放进 `research/`。你看过以后，`task.py start` 把状态改成进行中。
+- 会话启动时，注入开发者身份、当前 git 状态、进行中的任务、spec 索引和你最近的 journal。注入的是一份索引和状态报告，不会把所有文档整个塞进去。
+- 每条消息发出时，注入一小段当前任务状态对应的提示，让 AI 清楚现在在哪个阶段、下一步该做什么。这段文字写在 `workflow.md` 里，想改流程就改这个文件，不用去改 hook 脚本。
+- 子代理启动前，把这个任务需要的 spec 和需求文档注入给它。
 
-写代码时读的是 `prd.md`、这次用得到的 spec，有设计文档就一起读。spec 按任务挑，不会把十几份模板一次灌进提示词。`trellis init` 会先放下大约 17 个占位文件，分布在 backend、frontend、guides，题目覆盖目录、错误处理、日志、组件。占位文件本身几乎没信息。文档让你先做 bootstrap 任务 `00-bootstrap-guidelines`，再用自带的 `trellis-spec-bootstrap`，让模型从现有代码里起草第一版，然后你自己看质量。空模板就开写业务，模型读到的还是套话。
+所以你不用每次开场先说一遍"先读一下规范"。写一次，之后每次都在。
 
-检查时看 diff，对照 `check.jsonl` 里点名的 spec 和 research，再跑 lint、类型检查和测试。接口的错误格式、漏掉的权限校验、依赖方向写反，lint 经常看不见。spec 里如果写了「错误都走 `src/lib/errors.ts` 的 AppError，别直接抛普通 Error」，这一步才有东西可对。
+没有 hook 的平台也有办法：靠 `AGENTS.md` 之类每次必读的入口文件，让 AI 自己去读。效果会差一点，文档里也写明了各平台的能力差异。
 
-收尾时，update-spec 只把以后还要遵守的写法写进 `.trellis/spec/`。某次把登录路径改成某个具体 URL，留在任务记录里就够了。业务代码先按你点头的批次提交。提交已经在了，再跑 `/trellis:finish-work`。这个命令用 `add_session.py` 追加一条 journal。任务确实做完、验收也过了，它再通过 `task.py archive` 把任务目录挪进归档。
+### 按任务给 spec，不是一股脑全灌
 
-模型停住，或者跳步，文档让你跑 `/trellis:continue`。它看任务状态、目录里已经有哪些文件，以及每轮带上的 workflow-state，判断下一步该加载哪一段流程。
+最常见的做法是写一个很大的 `CLAUDE.md` 或 `.cursorrules`，每次全塞进去。文件一长，容易被截断，模型也容易抓不住重点。
 
-## 和另外几类做法比，它把力气花在仓库里
+Trellis 把 spec 拆成多个文件，再用任务目录里的 `implement.jsonl` 和 `check.jsonl` 列出"这次实现要读哪几份、这次检查要读哪几份"。每行就是一个文件路径加一句理由：
 
-下面是我自己的归类，拿来看 Trellis 把力气放在哪，不是官方排行。
+```jsonl
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "接口错误格式"}
+```
 
-superpowers 那一类把步骤卡得很死。先问清，再做计划，再按测试往下写，最后审查。模糊的想法会被问成能执行的计划。小任务也会被反复问、反复审。做完以后，经验还在对话里。仓库里没有 task、spec 和 journal 接着存。
+这样做前端任务的时候，不会把数据库规范也带进来。清单里只放 spec 和调研文档，不放要改的源码。
 
-openspec 那一类先写 spec 再实现。变更围绕 proposal、spec、design、tasks 走，适合规则多、要改很久的系统。规范写出来以后，模型这次读没读、读的是不是这一份、写的时候守不守，还得另有办法盯着。任务现在走到哪、换一个工具以后还记不记得，不是它主要要管的事。
+### Spec 绑定代码路径（动态加载）
 
-oh-my-claudecode 那一类把规划、实现、审查、排错拆成多个 agent。任务一大，这样分得开。agent、技能和 hook 一多，一个小需求也会被编排得很重。出了问题，更难查是哪一个环节偏了。
+这是官方文档里标成 beta 的一个功能，我觉得思路很好。你可以在 spec 的 frontmatter 里写 `paths`，声明它约束哪些文件：
 
-Trellis 把 spec、任务、每轮的 workflow-state、jsonl、journal，还有 finish 和 update-spec，放在同一个仓库结构里。换会话、换工具以后，还能不能读到同一份项目事实，是它主要在答的问题。
+```md
+---
+name: commands-workflow
+description: Workflow command and resolver contracts
+paths:
+  - packages/cli/src/commands/workflow.ts
+  - packages/cli/test/commands/workflow*.test.ts
+---
+```
 
-## 什么项目用了会更烦
+之后 AI 读或改到这些文件时，对应的规则会在那个时刻送过来。同一会话里已经送过、内容没变的，不会重复发，隔一段时间才用一个简短的提醒；spec 改了，或者会话被压缩过，就重新发完整内容。规则会出现在它要约束的那处修改旁边，而不是在会话开头说一句，聊了一百轮之后就被冲淡了。
 
-一次性脚本，比如一个油猴脚本，直接让模型写完就行。没有长期维护的仓库，建任务、写 PRD、回头改 spec，都是额外的时间。两三个人如果没人愿意改 spec，仓库里会留下空模板和过时约定。模型照着过时的写，比没有 spec 更糟。
+### 经验沉淀回 spec
 
-装之前先看运行环境。Mac、Linux、Windows 都支持，需要 Node.js 18 以上，还要 Python 3.9 以上。你得分得清 `.trellis/spec/`、`tasks/`、`workspace/`、`workflow.md`、`.runtime/` 各管什么，不然看不懂模型为什么忽然去改某一份 markdown。节奏也变了。vibe coding 是边说边写。这里先问清，写完再检查，最后才收尾。小任务会显得慢。
+任务做完之后，`trellis-update-spec` 会判断这次有没有值得长期遵守的做法。有的话写进 `.trellis/spec/`，只跟这个任务有关的事实留在任务目录里。
 
-技术栈和目录一变，spec 要跟着改。过时的 spec 会把模型带偏。任务拆得太碎，就只剩流程。太大，模型又会在一堆文件里迷路。适合单独建任务的，是得复盘、牵涉多个文件或多个决定、而且你希望下次还能打开看的那些。
+文档里有一个说法我挺认同：用得越多，AI 越懂你们。前提是有人把 review 里反复出现的意见变成 spec。今天 review 里说了一句"这里要校验入参"，明天它就应该成为规范里的一条，不再需要有人每次说。
 
-平台能力也不齐。`trellis init` 可以按 `--cursor`、`--codex`、`--claude` 这些旗标装适配层，核心目录相同，hook 和子代理则看平台给不给。Codex 靠仓库根上的 `AGENTS.md`，再加上 `UserPromptSubmit` hook。你得在 `~/.codex/config.toml` 里打开 hook，0.129 及以后写 `hooks = true`，更早的版本写 `codex_hooks = true`。不打开的话，聊天里输入 `/` 看不到这些命令，workflow-state 也不会自动注入。文档还说，每个要用的平台至少 init 一次。`/trellis:start` 主要留给没有 agent 的平台，文档点名的是 Kilo、Antigravity、Devin。支持 SessionStart 的，打开终端时已经读过 journal。
+### 跨会话记忆：记在文件里
 
-个人仓库也会碰到同样的断档。项目搁几个月，人自己也常常不记得上次为什么这样分目录。从 claude code 换到 codex 或 cursor，规则文件通常要重写，`.trellis/` 不用重写。同时养着几个仓库时，比如一个 Go 后端、一个 React 前端，各自的 spec 待在各自的目录里，模型不容易把上一个仓库的约定带过来。当时的取舍如果只在聊天记录里，记录一压缩就找不回。任务和 spec 进了 git，至少还有一份能打开的说明。
+AI 本身没有跨会话的记忆，Trellis 的办法是让仓库来记。
 
-团队更直接的好处，是人不必用同一个工具。有人用 cursor，有人用 claude code，新人用 codex，读的是同一份 `.trellis/`。
+每次 `finish-work` 会往 `.trellis/workspace/你的名字/journal-N.md` 追加一条，写这次做了什么。下一次会话启动时 hook 会读到近期的 journal 和进行中的任务。任务本身的需求、设计、调研也都留在 `.trellis/tasks/` 里。
 
-## 哪些文件进 git
+文档里有句话说得很清楚：下一次 AI 会话会重新读取仓库状态，不需要上一段聊天记录，也能知道任务是什么、哪些 spec 适用、下一步该做哪一步。聊天记录压缩了、换了台电脑、换了个 AI 工具，都不影响。
 
-按官方目录，`.trellis/spec/`、`.trellis/tasks/`、`.trellis/workspace/` 里的 journal 应该进仓库。`.trellis/.developer` 是当前这份检出上的开发者名字，设计上不提交。新克隆出来的仓库没有这个文件，Trellis 拿它判断是不是新同事第一次打开。`.trellis/.runtime/` 记的是这一次会话正在做哪个任务，也不提交。
+## 对团队：共享规范，不强制统一工具
 
-spec 和 task 进了 git，规范改动就可以走 PR。别人能看见错误格式和依赖方向是什么时候定的。
+对公司来说，我觉得 Trellis 最有价值的是这一块。
 
-## 装上以后先填 spec
+![团队共享 .trellis/ 的方式：不同 AI 工具读取同一份规范，新规范经 PR 评审后合入仓库](https://imgbed.caph.me/file/1791913603682_image.png)
+
+分工大概是这样：
+
+- `.trellis/spec/` 和 `.trellis/tasks/` 进 git，团队共用。spec 的改动跟代码一样走 PR review。
+- `.trellis/workspace/你的名字/` 是每个人自己的 journal，互不干扰。
+- `.trellis/.developer`（你是谁）和 `.trellis/.runtime/`（当前会话在做哪个任务）不提交，每台机器、每个窗口各用各的，所以同一个仓库里开两个窗口做不同任务也不会串。
+
+新同事加入也简单：clone 仓库，跑一次 `trellis init`，选"Set up developer identity on this device"，填个名字就行。注意别选 Full re-initialize，那会覆盖掉已有配置，影响全团队。
+
+这套东西带来的好处，是团队里有人把规范写好了，其他人的 AI 一起变好。有人用 Cursor，有人用 Claude Code，新人用 Codex，读的都是同一份。换工具的时候规范不用重写。
+
+## 使用成本
+
+介绍了这么多优点，也要说说代价，不然像在卖东西。
+
+- **小任务会变慢。** 它的节奏是先问清、再实现、再检查、最后收尾。改一行文案也走一遍就很重，所以它本来也允许跳过，直接 inline 做。
+- **空模板没用。** `trellis init` 会放大约 17 个占位的 spec 文件，内容几乎是空的。要先做 bootstrap 任务，让 AI 从现有代码里提炼出第一版规范，再由人把关。直接拿空模板开始写业务，AI 读到的还是套话。
+- **各平台能力不一样。** Cursor、Claude Code、OpenCode 这些有完整的 hook 和子代理。Codex 要在配置里打开 hook（`~/.codex/config.toml` 里写 `hooks = true`，0.129 及以后版本还要在 TUI 里用 `/hooks` 批准一次），不开的话只能靠 `AGENTS.md`。Kilo、Antigravity、Devin 这几个没有 hook，要手动进入工作流。
+- **要有人维护 spec。** spec 不更新就会过时，建议当成代码来对待。
+- **需要 Node.js 18+ 和 Python 3.9+。**
+- **协议是 AGPL-3.0。** 团队内部使用不需要额外授权，要基于它做商业化产品或服务才需要联系作者。
+
+## 怎么开始试
+
+不用全员铺开，官方也建议先选一个仓库试点。
 
 ```bash
 npm install -g @mindfoldhq/trellis@latest
-cd your-project && trellis init -u your-name
+cd your-project
+trellis init -u your-name --cursor   # 按你用的工具换成 --claude / --codex 等
 ```
 
-不写 `-u` 时，文档说会用 `git config user.name`。只想装某几个平台，可以写成 `trellis init --cursor --codex -u your-name`。
+装完之后的顺序我建议这样走：
 
-init 之后先做 bootstrap，别让模型对着空模板写业务代码。日常直接说需求，由它判断这次要不要建任务。它问能不能建，你确认就行。卡住了用 `/trellis:continue`。业务提交已经在了，再用 `/trellis:finish-work` 写 journal。
+1. 先跑 bootstrap 任务，让 AI 从真实代码里提出第一版 spec，自己过一遍。
+2. 日常直接说需求。AI 会判断要不要建任务，问你的时候确认就行。
+3. 它停下来或者跳步了，用 `/trellis:continue` 往下推进。
+4. 代码 commit 之后，用 `/trellis:finish-work` 归档并写 journal。
+5. 试用一两周，把 review 里重复出现的意见沉淀成 spec，看看新会话里要重复解释的东西有没有变少。
 
-## 来源
+## 参考
 
-- [Trellis 安装与第一个任务](https://docs.trytrellis.app/start/install-and-first-task)
-- [Trellis 快速开始](https://docs.trytrellis.app/quickstart)
-- [怎样写 spec](https://docs.trytrellis.app/guides/specs)
-- [npm 上的 Trellis](https://www.npmjs.com/package/@mindfoldhq/trellis)
+- [Trellis 官方文档](https://docs.trytrellis.app/zh)
+- [架构全景](https://docs.trytrellis.app/zh/advanced/architecture)
+- [How It Works](https://docs.trytrellis.app/zh/start/how-it-works)
+- [多平台与团队配置](https://docs.trytrellis.app/zh/advanced/multi-platform)
+- [真实业务场景](https://docs.trytrellis.app/zh/start/real-world-scenarios)
+- [Trellis on GitHub](https://github.com/mindfold-ai/Trellis)
