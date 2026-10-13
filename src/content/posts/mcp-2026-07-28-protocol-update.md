@@ -9,7 +9,7 @@ tags:
   - MRTR
   - 工具调用
 category: Agent
-draft: false
+draft: true
 ---
 
 # MCP 2026-07-28 把工具调用从会话里拆出来
