@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /home/ubuntu/caph-blog
+cd /home/ubuntu/firefly-blog
 git fetch origin main
 git reset --hard origin/main
 
-LOG=/tmp/caph-blog-deploy.log
+LOG=/tmp/firefly-blog-deploy.log
 echo "=== deploy $(date -Iseconds) ===" | tee "$LOG"
 
 # Docker build is noisy; redirect output to avoid SSH action buffer issues.

@@ -20,4 +20,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 30m
-          script: bash /home/ubuntu/caph-blog/scripts/deploy.sh
+          script: bash /home/ubuntu/firefly-blog/scripts/deploy.sh

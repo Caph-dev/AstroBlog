@@ -4,6 +4,7 @@ dist
 .git
 .github
 .vscode
+docs
 *.md
 !src/content/**/*.md
 pnpm-debug.log*
