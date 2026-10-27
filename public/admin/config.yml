@@ -4,6 +4,8 @@ backend:
   name: github
   repo: Caph-dev/AstroBlog
   branch: main
+  # 自建站没有 OAuth 客户端，只保留令牌登录，避免出现必失败的 OAuth 入口
+  auth_methods: [token]
   commit_messages:
     create: "content: 新增《{{slug}}》"
     update: "content: 更新《{{slug}}》"
