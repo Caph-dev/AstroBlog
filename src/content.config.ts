@@ -4,10 +4,17 @@ import { glob } from "astro/loaders";
 import { type ZodType, z } from "astro/zod";
 
 // frontmatter 里的日期可能是 YAML 原生 date，也可能被 CMS 写成带引号的字符串。
-// 只把非空字符串转成 Date，其余（null、空串、非法值）仍交给 z.date() 拒绝。
+// 仅把形如 YYYY-MM-DD / ISO 8601 的字符串转成 Date，
+// 其余（null、空串、非 ISO 写法）原样交给 z.date() 拒绝。
+// 注意：JS 会归一化越界日期（2026-02-31 → 2026-03-03），这里不做额外校验。
+const isoDateString =
+	/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+
 const yamlDate = z.preprocess(
 	(value) =>
-		typeof value === "string" && value.trim() !== "" ? new Date(value) : value,
+		typeof value === "string" && isoDateString.test(value.trim())
+			? new Date(value.trim())
+			: value,
 	z.date(),
 );
 
