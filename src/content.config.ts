@@ -3,6 +3,14 @@ import type { CollectionConfig } from "astro/content/config";
 import { glob } from "astro/loaders";
 import { type ZodType, z } from "astro/zod";
 
+// frontmatter 里的日期可能是 YAML 原生 date，也可能被 CMS 写成带引号的字符串。
+// 只把非空字符串转成 Date，其余（null、空串、非法值）仍交给 z.date() 拒绝。
+const yamlDate = z.preprocess(
+	(value) =>
+		typeof value === "string" && value.trim() !== "" ? new Date(value) : value,
+	z.date(),
+);
+
 type PostData = {
 	title: string;
 	published: Date;
@@ -63,8 +71,8 @@ const postsCollection: ContentCollection<PostData> = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/posts" }),
 	schema: z.object({
 		title: z.string(),
-		published: z.date(),
-		updated: z.date().optional(),
+		published: yamlDate,
+		updated: yamlDate.optional(),
 		draft: z.boolean().optional().default(false),
 		description: z.string().optional().default(""),
 		image: z.string().optional().default(""),

@@ -1,0 +1,69 @@
+# Sveltia CMS 配置 · https://sveltiacms.app/en/docs/
+# 登录方式：Sign In with Token（GitHub fine-grained PAT，仅需本仓库 Contents: Read and write）
+backend:
+  name: github
+  repo: Caph-dev/AstroBlog
+  branch: main
+  commit_messages:
+    create: "content: 新增《{{slug}}》"
+    update: "content: 更新《{{slug}}》"
+    delete: "content: 删除《{{slug}}》"
+    uploadMedia: "content: 上传 {{path}}"
+    deleteMedia: "content: 删除 {{path}}"
+
+# 空的可选字段不写入 frontmatter，避免 Astro Zod schema 报错
+output:
+  omit_empty_optional_fields: true
+
+# 图片上传落到站点的 /assets/uploads/（正文也可以直接写外部图床 URL）
+media_folder: public/assets/uploads
+public_folder: /assets/uploads
+
+collections:
+  - name: posts
+    label: 文章
+    label_singular: 文章
+    folder: src/content/posts
+    create: true
+    extension: md
+    format: frontmatter
+    # 允许在子目录（如“归档”）里浏览和新建文章
+    nested:
+      depth: 2
+    sortable_fields: [published, updated, title]
+    default: { field: published, direction: descending }
+    summary: "{{title}} · {{published}}"
+    fields:
+      - { name: title, label: 标题, widget: string }
+      - name: published
+        label: 发布日期
+        widget: datetime
+        type: date
+        format: "YYYY-MM-DD"
+        picker_utc: true
+        default: "{{now}}"
+      - name: updated
+        label: 更新日期（可选）
+        widget: datetime
+        type: date
+        format: "YYYY-MM-DD"
+        picker_utc: true
+        required: false
+      - name: description
+        label: 摘要
+        widget: text
+        required: false
+      - name: tags
+        label: 标签
+        widget: list
+        required: false
+        default: []
+      - name: category
+        label: 分类
+        widget: string
+        required: false
+      - name: draft
+        label: 草稿（勾选后不会发布到线上）
+        widget: boolean
+        default: false
+      - { name: body, label: 正文, widget: markdown }
