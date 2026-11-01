@@ -10,14 +10,13 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Prefer the netcup self-hosted runner (labels: self-hosted, netcup).
+    # Do not deploy back to Tencent/k3s.
+    runs-on: [self-hosted, netcup]
     timeout-minutes: 30
     steps:
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 30m
-          script: bash /home/ubuntu/firefly-blog/scripts/deploy.sh
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image and update caph-blog on netcup
+        run: bash scripts/deploy.sh
