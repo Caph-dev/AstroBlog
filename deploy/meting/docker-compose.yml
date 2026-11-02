@@ -11,6 +11,9 @@ services:
     environment:
       # 应用默认监听 3000
       PORT: "3000"
+      # 回链域名固定为 https：容器在 Caddy/隧道后面，靠请求头猜协议会得到 http，
+      # 那样返回的音频地址是 http://，在 https 页面上会被浏览器当混合内容拦掉。
+      BASE_URL: "https://caph.me"
       # 公开模式：封禁登录/账号/写入类端点，只保留只读音乐接口
       PUBLIC_MODE: "true"
       # 关闭“自动解灰”（用酷我/咪咕/QQ 等第三方音源替换取不到的歌）。
