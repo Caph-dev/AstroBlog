@@ -48,6 +48,17 @@ for i in $(seq 1 45); do
   sleep 2
 done
 
+# A recreated container must actually be running the image just pulled; and any
+# mount over the served path would mask the files baked into it.
+running_image="$(docker inspect --format '{{.Image}}' caph-blog 2>/dev/null || true)"
+expected_image="$(docker inspect --format '{{.Id}}' "$LOCAL_TAG")"
+echo "running_image=$running_image expected_image=$expected_image" | tee -a "$LOG"
+docker inspect --format '{{range .Mounts}}mount: {{.Type}} {{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' caph-blog | tee -a "$LOG"
+if [[ "$running_image" != "$expected_image" ]]; then
+  echo "caph-blog is not running the pulled image" | tee -a "$LOG"
+  exit 1
+fi
+
 curl -fsS -o /dev/null -H 'Host: caph.me' http://127.0.0.1/
 curl -fsS -o /dev/null https://caph.me/
 
