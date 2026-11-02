@@ -54,14 +54,7 @@ export const siteConfig: SiteConfig = {
 	description: "Caph 的个人博客，记录技术、AI Agent 与生活随笔。",
 
 	// 站点关键词
-	keywords: [
-		"Caph",
-		"Astro",
-		"AI Agent",
-		"博客",
-		"技术博客",
-		"静态博客",
-	],
+	keywords: ["Caph", "Astro", "AI Agent", "博客", "技术博客", "静态博客"],
 
 	// 主题色
 	themeColor: {
