@@ -21,7 +21,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		name: "文章",
 		url: "#",
 		icon: "material-symbols:article",
-		children: [LinkPresets.Archive, LinkPresets.Categories, LinkPresets.Tags],
+		// 归档入口已移除：归档页仍可通过 /archive/ 访问（分类/标签筛选依赖它），
+		// 但不再从导航栏暴露。
+		children: [LinkPresets.Categories, LinkPresets.Tags],
 	});
 
 	// 关于
