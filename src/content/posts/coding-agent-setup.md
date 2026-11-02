@@ -14,7 +14,7 @@ category: Agent
 
 1. [Pi](https://pi.dev/) : 简洁、高性能、高可自定义
 
-   ![在我们的基准测试中的成本与性能对比](https://imgbed.caph.me/file/1793620731078_image-20261102195844118.png)
+   ![在基准测试中的成本与性能对比](https://imgbed.caph.me/file/1793620731078_image-20261102195844118.png)
 
    > 基准测试来自 [databricks](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase)
 
