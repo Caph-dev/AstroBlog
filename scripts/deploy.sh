@@ -30,6 +30,10 @@ fi
 docker tag "$IMAGE_REF" "$LOCAL_TAG"
 
 cd "$COMPOSE_DIR"
+# Record what the compose project expects, so a name mismatch between the pulled
+# image and the service definition is visible in the deploy log.
+echo "--- compose service image/build ---" | tee -a "$LOG"
+docker compose config 2>/dev/null | grep -nE "^ *[a-z_]+:|image:|build:|context:|pull_policy:" | grep -B1 -A2 -E "image:|build:" | head -30 | tee -a "$LOG" || true
 # --no-build: never build here. The image was prepared by the GitHub runner and
 # only re-tagged locally, so compose must start exactly that local image.
 docker compose up -d --no-deps --no-build --force-recreate blog
@@ -52,7 +56,8 @@ done
 # mount over the served path would mask the files baked into it.
 running_image="$(docker inspect --format '{{.Image}}' caph-blog 2>/dev/null || true)"
 expected_image="$(docker inspect --format '{{.Id}}' "$LOCAL_TAG")"
-echo "running_image=$running_image expected_image=$expected_image" | tee -a "$LOG"
+requested_image="$(docker inspect --format '{{.Config.Image}}' caph-blog 2>/dev/null || true)"
+echo "running_image=$running_image expected_image=$expected_image requested_image=$requested_image" | tee -a "$LOG"
 docker inspect --format '{{range .Mounts}}mount: {{.Type}} {{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' caph-blog | tee -a "$LOG"
 if [[ "$running_image" != "$expected_image" ]]; then
   echo "caph-blog is not running the pulled image" | tee -a "$LOG"
