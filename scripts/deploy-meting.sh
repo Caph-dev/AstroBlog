@@ -66,9 +66,33 @@ MARKER='# meting-api (managed by scripts/deploy-meting.sh)'
 
 patch_caddy() {
   python3 - "$host_cfg" <<'PY'
+import re
 import sys
+
 path = sys.argv[1]
-NEW = (
+BEGIN = "  # BEGIN meting-api (managed by scripts/deploy-meting.sh)\n"
+END = "  # END meting-api (managed by scripts/deploy-meting.sh)\n"
+REGION = (
+    BEGIN
+    + "  @meting {\n"
+    "    host caph.me\n"
+    "    path /meting /meting/*\n"
+    "  }\n"
+    "  handle @meting {\n"
+    "    # 封面是 302，源站带 no-store，Cloudflare 会直接 bypass 缓存；\n"
+    "    # 封面地址本身是稳定的，这里放宽成可缓存。\n"
+    "    @meting-pic expression {http.request.uri.query}.contains(\"type=pic\")\n"
+    "    header @meting-pic Cache-Control \"public, max-age=86400\"\n"
+    "    reverse_proxy caph-meting:3000 {\n"
+    "      # 网易云 CDN 的 302 给的是 http:// 地址，而页面是 https，浏览器会按混合内容拦掉；\n"
+    "      # CDN 本身支持 https，这里把重定向目标改写成 https。\n"
+    "      header_down Location http:// https://\n"
+    "    }\n"
+    "  }\n"
+    + END
+)
+# 旧版本（无 BEGIN/END 分隔）的原文，用于就地升级
+LEGACY = [
     "  # meting-api (managed by scripts/deploy-meting.sh)\n"
     "  @meting {\n"
     "    host caph.me\n"
@@ -80,9 +104,7 @@ NEW = (
     "      # CDN 本身支持 https，这里把重定向目标改写成 https。\n"
     "      header_down Location http:// https://\n"
     "    }\n"
-    "  }\n"
-)
-OLD = (
+    "  }\n",
     "  # meting-api (managed by scripts/deploy-meting.sh)\n"
     "  @meting {\n"
     "    host caph.me\n"
@@ -90,25 +112,38 @@ OLD = (
     "  }\n"
     "  handle @meting {\n"
     "    reverse_proxy caph-meting:3000\n"
-    "  }\n"
-)
+    "  }\n",
+]
+
 with open(path) as f:
     src = f.read()
-if NEW in src:
-    print("caddyfile: already routed")
+
+if REGION in src:
+    print("caddyfile: already up to date")
     raise SystemExit(0)
-if OLD in src:
-    src = src.replace(OLD, NEW)
+
+if BEGIN in src and END in src:
+    pattern = re.escape(BEGIN) + ".*?" + re.escape(END)
+    src, n = re.subn(pattern, REGION, src, flags=re.S)
     with open(path, "w") as f:
         f.write(src)
-    print("caddyfile: upgraded existing route")
+    print(f"caddyfile: upgraded {n} managed region(s)")
     raise SystemExit(0)
+
+for old in LEGACY:
+    if old in src:
+        src = src.replace(old, REGION)
+        with open(path, "w") as f:
+            f.write(src)
+        print("caddyfile: upgraded legacy route")
+        raise SystemExit(0)
+
 anchor = "  @blog host caph.me\n"
 count = src.count(anchor)
 if count != 2:
     print(f"caddyfile: unexpected @blog anchor count={count}, refusing to patch")
     raise SystemExit(2)
-src = src.replace(anchor, NEW + anchor)
+src = src.replace(anchor, REGION + anchor)
 with open(path, "w") as f:
     f.write(src)
 print("caddyfile: route inserted")
