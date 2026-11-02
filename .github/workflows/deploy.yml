@@ -1,22 +1,133 @@
 name: Deploy Blog
 
+# Build the image on a GitHub-hosted runner, push it to GHCR, then let the
+# netcup self-hosted runner pull and restart the container. Compilation no
+# longer happens on the netcup host.
+#
+# `needs:` cannot span workflow files, so the CI gate is expressed as
+# workflow_run on the default branch. There is deliberately no manual trigger:
+# an approved deploy means "CI passed for this commit". To redeploy anyway, use
+# "Re-run jobs" on the previous Deploy Blog run.
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ main ]
 
 permissions:
   contents: read
 
-jobs:
-  deploy:
-    # Prefer the netcup self-hosted runner (labels: self-hosted, netcup).
-    # Do not deploy back to Tencent/k3s.
-    runs-on: [self-hosted, netcup]
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# A running deploy is never cancelled midway through the container restart.
+# GitHub keeps at most one running and one pending run per group, so a newer
+# push replaces an older waiting run instead of queueing indefinitely.
+concurrency:
+  group: deploy-blog
+  cancel-in-progress: false
 
-      - name: Build image and update caph-blog on netcup
+jobs:
+  image:
+    # workflow_run fires for every CI run on main, so reject failures, PR runs,
+    # and runs for other branches.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+    steps:
+      - name: Checkout the commit CI validated
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Compute lowercase image name
+        id: image
+        run: |
+          set -euo pipefail
+          name="ghcr.io/$(printf '%s' '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "image=$name:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:sha-${{ github.event.workflow_run.head_sha }}
+            ${{ steps.image.outputs.name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [ image ]
+    # Keep the netcup self-hosted runner (labels: self-hosted, netcup).
+    # Do not deploy back to Tencent/k3s.
+    runs-on: [ self-hosted, netcup ]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout the commit CI validated
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Skip superseded deploy
+        id: guard
+        run: |
+          set -euo pipefail
+          tip="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}" refs/heads/main | cut -f1)"
+          if [[ "$tip" != "${{ github.event.workflow_run.head_sha }}" ]]; then
+            echo "::notice::main has moved to ${tip}; skipping deploy of ${{ github.event.workflow_run.head_sha }}"
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Credentials must live in a throwaway directory. DOCKER_CONFIG has to be
+      # exported in this same step: writing it only to GITHUB_ENV would apply to
+      # the next step, so the login below would hit the host's real docker
+      # config and leave the credential there.
+      - name: Log in to GHCR (temporary config)
+        if: steps.guard.outputs.skip != '1'
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          GHCR_ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          cfg="$(mktemp -d)"
+          export DOCKER_CONFIG="$cfg"
+          echo "DOCKER_CONFIG=$cfg" >> "$GITHUB_ENV"
+          echo "GHCR_TMP_CONFIG=$cfg" >> "$GITHUB_ENV"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+
+      - name: Pull image and restart caph-blog
+        if: steps.guard.outputs.skip != '1'
+        env:
+          IMAGE_REF: ${{ needs.image.outputs.image }}:sha-${{ github.event.workflow_run.head_sha }}
         run: bash scripts/deploy.sh
+
+      # Only clean up the directory this run created, so a skipped or failed
+      # earlier step never logs the host's own docker credentials out.
+      - name: Remove temporary registry credentials
+        if: always()
+        run: |
+          if [[ -n "${GHCR_TMP_CONFIG:-}" ]]; then
+            docker logout ghcr.io >/dev/null 2>&1 || true
+            rm -rf "$GHCR_TMP_CONFIG"
+          fi
