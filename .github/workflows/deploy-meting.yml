@@ -54,6 +54,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: upstream
+          # 上游自带 Dockerfile 已损坏（用 yarn 而仓库实际是 pnpm），用本仓库这份
+          file: deploy/meting/Dockerfile
           push: true
           tags: |
             ${{ steps.meta.outputs.image }}
