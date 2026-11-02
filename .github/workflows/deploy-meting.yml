@@ -1,7 +1,8 @@
 name: Deploy Meting API
 
-# 手动触发：在 netcup 主机上部署自建 Meting 音乐 API，并接入 caph.me/meting/。
-# 只在需要新增/升级该服务时手动运行，不参与博客的自动部署流程。
+# 手动触发：构建上游 music api 镜像，在 netcup 主机上部署自建 Meting 服务，
+# 并把它接入现有 Caddy 的 caph.me/meting/ 路径。
+# 只在需要新增或升级该服务时手动运行，不参与博客的自动部署流程。
 on:
   workflow_dispatch:
 
@@ -9,13 +10,79 @@ concurrency:
   group: netcup-host-config
   cancel-in-progress: false
 
+env:
+  # 上游实现（meting 协议 + 网易云）；固定提交，升级时显式改这里。
+  UPSTREAM_REPO: qijie233/meting-api-enhanced
+  UPSTREAM_SHA: 3c163c375f1d34fa269bb131da894a36d81c4cd6
+
 jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - name: Checkout upstream
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UPSTREAM_REPO }}
+          ref: ${{ env.UPSTREAM_SHA }}
+          path: upstream
+
+      - name: Resolve image name
+        id: meta
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "image=ghcr.io/${owner}/meting-api:sha-${UPSTREAM_SHA:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: upstream
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}
+            ghcr.io/${{ github.repository_owner }}/meting-api:latest
+          cache-from: type=gha,scope=meting
+          cache-to: type=gha,scope=meting,mode=max
+
   deploy:
+    name: Deploy on netcup
+    needs: build
     runs-on: [self-hosted, netcup]
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deploy meting api
-        run: bash scripts/deploy-meting.sh
+        run: |
+          export DOCKER_CONFIG="$(mktemp -d)"
+          echo "GHCR_TMP_CONFIG=$DOCKER_CONFIG" >> "$GITHUB_ENV"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin >/dev/null
+          METING_IMAGE="${{ needs.build.outputs.image }}" bash scripts/deploy-meting.sh
+
+      - name: Clean up registry credentials
+        if: always()
+        run: |
+          if [ -n "${GHCR_TMP_CONFIG:-}" ]; then
+            docker logout ghcr.io >/dev/null 2>&1 || true
+            rm -rf "$GHCR_TMP_CONFIG"
+          fi

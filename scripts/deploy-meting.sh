@@ -12,6 +12,12 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT/deploy/meting/docker-compose.yml"
+METING_IMAGE="${METING_IMAGE:-}"
+if [[ -z "$METING_IMAGE" ]]; then
+  echo "METING_IMAGE is required (e.g. ghcr.io/caph-dev/meting-api:sha-xxxx)" >&2
+  exit 1
+fi
+export METING_IMAGE
 PROJECT="caph-meting"
 CONTAINER="caph-meting"
 CADDY="caph-caddy"

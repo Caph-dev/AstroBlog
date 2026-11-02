@@ -1,10 +1,11 @@
 # 自建网易云 Meting API（博客音乐播放器的在线音源）。
 # 由 scripts/deploy-meting.sh 在 netcup 主机上通过 runner 启动，独立 compose 项目，
 # 不直接对外暴露：Caddy 在 caph.me/meting/ 路径上反代到它。
+# 镜像来自 .github/workflows/deploy-meting.yml 对上游的实现构建结果，
+# 通过 METING_IMAGE 传入（上游：qijie233/meting-api-enhanced）。
 services:
   meting:
-    # 固定 digest，避免 :latest 漂移；升级时由脚本显式改这里。
-    image: moefurina/ncm-api@sha256:2fcf4dc49313109a91f6cec99c6b36ebd17e8f1fdc89686121dfd14525937896
+    image: ${METING_IMAGE:?METING_IMAGE must be set}
     container_name: caph-meting
     restart: unless-stopped
     environment:
@@ -12,9 +13,11 @@ services:
       PORT: "3000"
       # 公开模式：封禁登录/账号/写入类端点，只保留只读音乐接口
       PUBLIC_MODE: "true"
-      # 关闭“自动解灰”（用酷我/咪咕/QQ 等第三方音源替换无版权歌）。
-      # 关掉的目的是行为可预期：取不到网易云原曲就明确失败，而不是悄悄换成别家的录音。
+      # 关闭“自动解灰”（用酷我/咪咕/QQ 等第三方音源替换取不到的歌）。
+      # 这样行为可预期：拿不到网易云原曲就明确失败，而不是悄悄换成别家的录音。
       ENABLE_GENERAL_UNBLOCK: "false"
+      # 只允许本站页面跨域调用
+      CORS_ALLOW_ORIGIN: "https://caph.me"
     networks:
       - caph-net
     ports:
