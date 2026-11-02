@@ -68,18 +68,21 @@ patch_caddy() {
   python3 - "$host_cfg" <<'PY'
 import sys
 path = sys.argv[1]
-marker = "# meting-api (managed by scripts/deploy-meting.sh)"
-with open(path) as f:
-    src = f.read()
-if marker in src:
-    print("caddyfile: already routed")
-    raise SystemExit(0)
-anchor = "  @blog host caph.me\n"
-count = src.count(anchor)
-if count != 2:
-    print(f"caddyfile: unexpected @blog anchor count={count}, refusing to patch")
-    raise SystemExit(2)
-block = (
+NEW = (
+    "  # meting-api (managed by scripts/deploy-meting.sh)\n"
+    "  @meting {\n"
+    "    host caph.me\n"
+    "    path /meting /meting/*\n"
+    "  }\n"
+    "  handle @meting {\n"
+    "    reverse_proxy caph-meting:3000 {\n"
+    "      # 网易云 CDN 的 302 给的是 http:// 地址，而页面是 https，浏览器会按混合内容拦掉；\n"
+    "      # CDN 本身支持 https，这里把重定向目标改写成 https。\n"
+    "      header_down Location http:// https://\n"
+    "    }\n"
+    "  }\n"
+)
+OLD = (
     "  # meting-api (managed by scripts/deploy-meting.sh)\n"
     "  @meting {\n"
     "    host caph.me\n"
@@ -89,7 +92,23 @@ block = (
     "    reverse_proxy caph-meting:3000\n"
     "  }\n"
 )
-src = src.replace(anchor, block + anchor)
+with open(path) as f:
+    src = f.read()
+if NEW in src:
+    print("caddyfile: already routed")
+    raise SystemExit(0)
+if OLD in src:
+    src = src.replace(OLD, NEW)
+    with open(path, "w") as f:
+        f.write(src)
+    print("caddyfile: upgraded existing route")
+    raise SystemExit(0)
+anchor = "  @blog host caph.me\n"
+count = src.count(anchor)
+if count != 2:
+    print(f"caddyfile: unexpected @blog anchor count={count}, refusing to patch")
+    raise SystemExit(2)
+src = src.replace(anchor, NEW + anchor)
 with open(path, "w") as f:
     f.write(src)
 print("caddyfile: route inserted")
