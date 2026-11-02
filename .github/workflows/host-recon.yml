@@ -1,0 +1,52 @@
+name: Host Recon
+
+# 临时只读诊断工作流：查看 netcup 主机上现有的容器、端口和反向代理，
+# 为新增 meting 实例确定放置方式。除日志外不做任何改动，确认后即删除。
+on:
+  workflow_dispatch:
+
+jobs:
+  recon:
+    runs-on: [self-hosted, netcup]
+    steps:
+      - name: Containers
+        run: |
+          echo "=== docker ps ==="
+          docker ps --format '{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}'
+          echo "=== compose projects ==="
+          docker compose ls -a 2>/dev/null || true
+
+      - name: Compose stack
+        run: |
+          cd /home/caph/compose/caph-stack || exit 0
+          echo "=== files ==="
+          ls -la
+          echo "=== services ==="
+          docker compose config --services 2>/dev/null || true
+          echo "=== images ==="
+          docker compose config --images 2>/dev/null || true
+          echo "=== ports ==="
+          docker compose config 2>/dev/null | grep -E '^\s+(-\s+)?"?[0-9.:]+:[0-9]+' || true
+
+      - name: Listening ports
+        run: |
+          echo "=== ss -tlnp ==="
+          (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null) | head -40
+
+      - name: Reverse proxy hints
+        run: |
+          echo "=== caddy containers ==="
+          docker ps --format '{{.Names}} {{.Image}}' | grep -i caddy || echo none
+          echo "=== caddyfile candidates ==="
+          find /home/caph/compose -maxdepth 3 -iname 'Caddyfile*' -o -maxdepth 3 -iname '*.caddy' 2>/dev/null | head -10
+          echo "=== nginx candidates ==="
+          find /home/caph/compose -maxdepth 3 -iname 'nginx.conf' 2>/dev/null | head -10
+
+      - name: Host capacity
+        run: |
+          echo "=== disk ==="
+          df -h / | tail -1
+          echo "=== mem ==="
+          free -m | head -2
+          echo "=== docker networks ==="
+          docker network ls
