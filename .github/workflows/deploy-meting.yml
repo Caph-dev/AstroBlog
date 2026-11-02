@@ -1,0 +1,21 @@
+name: Deploy Meting API
+
+# 手动触发：在 netcup 主机上部署自建 Meting 音乐 API，并接入 caph.me/meting/。
+# 只在需要新增/升级该服务时手动运行，不参与博客的自动部署流程。
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: netcup-host-config
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, netcup]
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy meting api
+        run: bash scripts/deploy-meting.sh
