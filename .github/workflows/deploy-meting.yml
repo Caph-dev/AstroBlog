@@ -90,6 +90,17 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin >/dev/null
           METING_IMAGE="${{ needs.build.outputs.image }}" bash scripts/deploy-meting.sh
 
+      - name: Verify response headers at the origin
+        run: |
+          for q in \
+            "type=pic&server=netease&id=29540314&cover=300" \
+            "server=netease&type=playlist&id=18554736499" \
+            "type=url&server=netease&id=29540314&br=320"; do
+            echo "### $q"
+            curl -s -D - -o /dev/null -H 'Host: caph.me' "http://127.0.0.1/meting/?$q" \
+              | grep -iE '^(HTTP/|cache-control|location)' | head -3
+          done
+
       - name: Clean up registry credentials
         if: always()
         run: |
