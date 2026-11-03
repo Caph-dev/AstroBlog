@@ -1,6 +1,7 @@
 ---
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import ScrollDownIndicator from "@/components/controls/ScrollDownIndicator.astro";
+import AsciiOceanBanner from "@/components/features/AsciiOceanBanner.astro";
 import BackgroundPlayer from "@/components/features/BackgroundPlayer.astro";
 import BannerHomeTextOverlay from "@/components/layout/BannerHomeTextOverlay.astro";
 import BannerPostMetaOverlay from "@/components/layout/BannerPostMetaOverlay.astro";
@@ -23,11 +24,12 @@ const wallpaperPosition = state.isFullscreenMode
 	? (backgroundWallpaper.fullscreen?.position ??
 		backgroundWallpaper.banner?.position)
 	: backgroundWallpaper.banner?.position;
+const asciiOceanEnabled = backgroundWallpaper.banner?.source === "ascii-ocean";
 ---
 
 <!-- Wallpaper - 如果允许切换则始终渲染，否则只渲染当前模式 -->
 {(state.isWallpaperSwitchable || state.isBannerMode || state.isFullscreenMode || state.isOverlayMode) && (
-<div id="wallpaper-wrapper" class="absolute z-10 w-full overflow-hidden" style="--overlay-opacity: ${backgroundWallpaper.overlay?.opacity ?? 0.8}; --overlay-z-index: ${backgroundWallpaper.overlay?.zIndex ?? -1}; --overlay-blur: ${backgroundWallpaper.overlay?.blur ?? 0}px;">
+<div id="wallpaper-wrapper" class="absolute z-10 w-full overflow-hidden" data-ascii-ocean={asciiOceanEnabled ? "loading" : undefined} style="--overlay-opacity: ${backgroundWallpaper.overlay?.opacity ?? 0.8}; --overlay-z-index: ${backgroundWallpaper.overlay?.zIndex ?? -1}; --overlay-blur: ${backgroundWallpaper.overlay?.blur ?? 0}px;">
 <!-- 背景图片显示 -->
     {state.hasMultipleImages ? (
     /* 轮播模式：渲染所有图片为 slide-item */
@@ -213,6 +215,11 @@ const wallpaperPosition = state.isFullscreenMode
                 return mode === WALLPAPER_BANNER || mode === 'fullscreen';
             }
 
+            function isCoveredByAsciiOcean() {
+                var wrapper = document.getElementById('wallpaper-wrapper');
+                return !!wrapper && wrapper.getAttribute('data-ascii-ocean') === 'ready';
+            }
+
             // 图片淡入：Layout 里的全局 initImageLoadFadeIn 只在解析期扫一次，
             // 之后克隆进来的图片得自己接管，否则会一直停在 opacity-0
             function fadeInWhenLoaded(root) {
@@ -315,6 +322,7 @@ const wallpaperPosition = state.isFullscreenMode
             }
 
             function changeToSlide(targetIndex, resetProgress) {
+                if (isCoveredByAsciiOcean()) return;
                 var slides = getVisibleSlides();
                 if (slides.length <= 1) return;
                 if (transitioning) return;
@@ -349,6 +357,7 @@ const wallpaperPosition = state.isFullscreenMode
                 stopAutoPlay();
                 if (!isCarouselEnabled()) return;
                 if (!isBannerWallpaperMode()) return;
+                if (isCoveredByAsciiOcean()) return;
 
                 appState.isPlaying = true;
                 appState.autoPlayTimer = setTimeout(function advance() {
@@ -370,6 +379,7 @@ const wallpaperPosition = state.isFullscreenMode
 
             // 键盘控制
             document.addEventListener('keydown', function(e) {
+                if (isCoveredByAsciiOcean()) return;
                 if (!isBannerWallpaperMode() || !isCarouselEnabled()) return;
                 if (e.key === 'ArrowRight') {
                     var slides = getVisibleSlides();
@@ -388,6 +398,7 @@ const wallpaperPosition = state.isFullscreenMode
                 appState.touchStartX = e.changedTouches[0].screenX;
             }, { passive: true });
             document.addEventListener('touchend', function(e) {
+                if (isCoveredByAsciiOcean()) return;
                 if (!isBannerWallpaperMode() || !isCarouselEnabled()) return;
                 appState.touchEndX = e.changedTouches[0].screenX;
                 var diff = appState.touchEndX - appState.touchStartX;
@@ -408,6 +419,10 @@ const wallpaperPosition = state.isFullscreenMode
                 } else {
                     stopAutoPlay();
                 }
+            });
+            window.addEventListener('asciiOceanCover', function(e) {
+                if (e.detail && e.detail.covered) stopAutoPlay();
+                else if (isCarouselEnabled() && isBannerWallpaperMode()) startAutoPlay();
             });
 
             // 随机首张：只有被抽中的这一张会真的下载，其余仍留在 <template> 里
@@ -529,6 +544,8 @@ const wallpaperPosition = state.isFullscreenMode
     </script>
     )}
     
+    {asciiOceanEnabled && <AsciiOceanBanner />}
+
     {backgroundWallpaper.playerEnable && typeof backgroundWallpaper.src === "object" && !Array.isArray(backgroundWallpaper.src) && backgroundWallpaper.src.playerUrl && (
         <BackgroundPlayer playerUrl={backgroundWallpaper.src.playerUrl} playerMode={backgroundWallpaper.common?.playerMode ?? "order"} />
     )}

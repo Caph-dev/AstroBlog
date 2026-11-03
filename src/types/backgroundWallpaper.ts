@@ -65,6 +65,7 @@ export type BackgroundWallpaperConfig = {
 
 	// Banner模式特有配置
 	banner?: {
+		source?: "image" | "ascii-ocean";
 		position?:
 			| "top"
 			| "center"

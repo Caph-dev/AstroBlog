@@ -14,7 +14,12 @@
       "!**/dist/**/*",
       "!**/node_modules/**/*",
       "!**/src/constants/icons-data.json",
-      "!**/src/constants/lqips.json"
+      "!**/src/constants/lqips.json",
+      "!**/src/utils/ascii-sharks/engine.ts",
+      "!**/src/utils/ascii-sharks/renderer.ts",
+      "!**/src/utils/ascii-sharks/world.ts",
+      "!**/src/utils/ascii-sharks/math.ts",
+      "!**/src/utils/ascii-sharks/species.ts"
     ]
   },
   "formatter": {
