@@ -142,7 +142,7 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	},
 	// Banner模式特有配置
 	banner: {
-		// 横幅来源："image" 使用图片，"ascii-ocean" 使用动画，图片仍作回退。
+		// Banner 模式来源："image" 使用图片；"ascii-ocean" 同时显示在横幅和页面背景，图片仍作回退。
 		source: "ascii-ocean",
 		// 图片位置
 		// 支持所有CSS object-position值，如: 'top', 'center', 'bottom', 'left top', 'right bottom', '25% 75%', '10px 20px'..

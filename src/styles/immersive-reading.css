@@ -35,6 +35,7 @@ body.immersive-reading #wallpaper-gradient,
 body.immersive-reading #banner-images-container,
 body.immersive-reading #banner-overlay-container,
 body.immersive-reading #banner-dim-container,
+body.immersive-reading #ascii-ocean-canvas,
 body.immersive-reading #canvas_sakura {
 	display: none !important;
 	visibility: hidden !important;

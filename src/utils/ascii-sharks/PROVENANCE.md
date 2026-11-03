@@ -87,10 +87,19 @@ checked there.
 
 ## Local integration (this repo only)
 
-`banner.ts` owns the banner lifecycle (inactive/loading/ready/failed) and the
-`#ascii-ocean-canvas` in `#wallpaper-wrapper`; the light-theme palette is a CSS
-`invert(1) hue-rotate(180deg)` on the canvas in `src/styles/layout-styles.css`,
-because the renderer's palette is dark-only and `banner-home.css` only loads on
-the home page while the banner exists everywhere. The canvas is switched on
-without an opacity transition, so the grid and the matching overlay palette
-appear in the same frame instead of cross-fading over the image.
+`banner.ts` owns the inactive, loading, ready and failed states, which it stores
+on `#wallpaper-wrapper[data-ascii-ocean]`. `MainGridLayout.astro` renders one
+fixed, viewport-sized canvas outside that wrapper. The wrapper clips its
+contents, moves on desktop non-home pages and is hidden on mobile non-home
+pages, so its visibility does not control the canvas.
+
+The engine runs in banner mode and stops during immersive reading. Pointer input
+is limited to the banner, excluding touch and actionable elements. When the
+first frame is ready, CSS hides the fallback image, waves, gradient, dim overlay
+and vignette. The image remains visible before the first frame and after a
+failure.
+
+The light-theme palette applies `invert(1) hue-rotate(180deg)` to the canvas in
+`src/styles/layout-styles.css`. The canvas and title colors switch together,
+without an opacity transition. Ocean-specific styles are gated on banner mode so
+they stop applying immediately when the wallpaper mode changes.

@@ -7,6 +7,9 @@ export const ASCII_OCEAN_COVER_EVENT = "asciiOceanCover";
 
 const BANNER_MODE = "banner";
 
+const IMMERSIVE_CLASS = "immersive-reading";
+const IMMERSIVE_EVENT = "immersiveReadingChange";
+
 const INTERACTIVE_SELECTOR = [
 	"a",
 	"button",
@@ -59,6 +62,7 @@ class BannerOcean implements AsciiOceanBannerController {
 
 		window.addEventListener("wallpaperModeChange", this.onModeChange);
 		window.addEventListener("resize", this.onResize);
+		document.addEventListener(IMMERSIVE_EVENT, this.onImmersiveChange);
 		if (typeof ResizeObserver !== "undefined") {
 			this.resizeObserver = new ResizeObserver(this.onResize);
 			this.resizeObserver.observe(wrapper);
@@ -87,6 +91,7 @@ class BannerOcean implements AsciiOceanBannerController {
 	destroy = (): void => {
 		window.removeEventListener("wallpaperModeChange", this.onModeChange);
 		window.removeEventListener("resize", this.onResize);
+		document.removeEventListener(IMMERSIVE_EVENT, this.onImmersiveChange);
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		if (this.syncRaf) {
@@ -102,6 +107,10 @@ class BannerOcean implements AsciiOceanBannerController {
 	};
 
 	private onResize = (): void => {
+		this.requestSync();
+	};
+
+	private onImmersiveChange = (): void => {
 		this.requestSync();
 	};
 
@@ -122,10 +131,9 @@ class BannerOcean implements AsciiOceanBannerController {
 
 	private shouldRun(): boolean {
 		if (!this.isBannerMode()) return false;
+		if (document.body.classList.contains(IMMERSIVE_CLASS)) return false;
 		const rect = this.canvas.getBoundingClientRect();
-		if (rect.width < 1 || rect.height < 1) return false;
-		const style = getComputedStyle(this.wrapper);
-		return style.display !== "none" && style.visibility !== "hidden";
+		return rect.width >= 1 && rect.height >= 1;
 	}
 
 	private startEngine(): void {
@@ -197,7 +205,18 @@ class BannerOcean implements AsciiOceanBannerController {
 		if (event.pointerType === "touch") return false;
 		const target = event.target;
 		if (isElement(target) && target.closest(INTERACTIVE_SELECTOR)) return false;
-		return true;
+		return this.isOverBanner(event);
+	}
+
+	private isOverBanner(event: PointerEvent): boolean {
+		const rect = this.wrapper.getBoundingClientRect();
+		if (rect.width < 1 || rect.height < 1) return false;
+		return (
+			event.clientX >= rect.left &&
+			event.clientX <= rect.right &&
+			event.clientY >= rect.top &&
+			event.clientY <= rect.bottom
+		);
 	}
 }
 

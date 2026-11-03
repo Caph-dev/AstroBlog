@@ -154,7 +154,9 @@
 		}
 
 		private startAnimation(): void {
-			if (this.animationId !== null || !this.renderer) return;
+			if (this.animationId !== null || !this.renderer || !this.canvas) return;
+			const { width, height } = this.measure();
+			if (width <= 0 || height <= 0) return;
 			const animate = () => {
 				if (!this.renderer || !this.canvas) return;
 				try {

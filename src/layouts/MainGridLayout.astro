@@ -8,10 +8,12 @@ import NavMenuPanel from "@components/layout/NavMenuPanel.astro";
 import SideBar from "@components/layout/SideBar.astro";
 import type { MarkdownHeading } from "astro";
 import FloatingControls from "@/components/controls/FloatingControls.astro";
+import AsciiOceanBanner from "@/components/features/AsciiOceanBanner.astro";
 import CategoryBar from "@/components/layout/CategoryBar.astro";
 import SidebarColumn from "@/components/layout/SidebarColumn.astro";
 import WallpaperSection from "@/components/layout/WallpaperSection.astro";
 import {
+	backgroundWallpaper,
 	live2dWidgetConfig,
 	navbarMode,
 	sidebarLayoutConfig,
@@ -73,6 +75,8 @@ const isPostPage = !!postSlug;
 const shouldRenderCategoryBar = !!siteConfig.categoryBar;
 const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
 
+const asciiOceanEnabled = backgroundWallpaper.banner?.source === "ascii-ocean";
+
 const banner = getBannerVisibilityState({
 	isHomePage: isHomePageCheck,
 	isPostPage,
@@ -97,6 +101,8 @@ const {
 
 <slot slot="head" name="head" />
 <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
+
+{asciiOceanEnabled && <AsciiOceanBanner />}
 
 <WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
 

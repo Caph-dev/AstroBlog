@@ -1,7 +1,6 @@
 ---
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import ScrollDownIndicator from "@/components/controls/ScrollDownIndicator.astro";
-import AsciiOceanBanner from "@/components/features/AsciiOceanBanner.astro";
 import BackgroundPlayer from "@/components/features/BackgroundPlayer.astro";
 import BannerHomeTextOverlay from "@/components/layout/BannerHomeTextOverlay.astro";
 import BannerPostMetaOverlay from "@/components/layout/BannerPostMetaOverlay.astro";
@@ -544,8 +543,6 @@ const asciiOceanEnabled = backgroundWallpaper.banner?.source === "ascii-ocean";
     </script>
     )}
     
-    {asciiOceanEnabled && <AsciiOceanBanner />}
-
     {backgroundWallpaper.playerEnable && typeof backgroundWallpaper.src === "object" && !Array.isArray(backgroundWallpaper.src) && backgroundWallpaper.src.playerUrl && (
         <BackgroundPlayer playerUrl={backgroundWallpaper.src.playerUrl} playerMode={backgroundWallpaper.common?.playerMode ?? "order"} />
     )}
