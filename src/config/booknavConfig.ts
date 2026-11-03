@@ -25,6 +25,33 @@ export const booknavPageConfig: BooknavPageConfig = {
 // 每个数组项是一个分类组，分类组内的 items 是该分类下的书签
 export const booknavConfig: BooknavGroup[] = [
 	{
+		id: "ai-agent",
+		name: "AI 与 Agent",
+		icon: "material-symbols:smart-toy-outline",
+		desc: "模型服务状态与 Agent 资料",
+		weight: 110,
+		items: [
+			{
+				title: "DeepSeek Status",
+				url: "https://status.deepseek.com/",
+				desc: "DeepSeek 官方服务状态页，查看各服务可用性与历史事故记录",
+				weight: 30,
+			},
+			{
+				title: "DeepSeek Monitor Archive",
+				url: "https://deepseek-monitor-archive.pages.dev/",
+				desc: "DeepSeek 监测记录与公开分析",
+				weight: 20,
+			},
+			{
+				title: "Phistory",
+				url: "https://phistory.cc/",
+				desc: "按版本归档的 AI 编程 Agent 系统提示词与工具定义",
+				weight: 10,
+			},
+		],
+	},
+	{
 		id: "dev",
 		name: "开发",
 		icon: "material-symbols:code-rounded",

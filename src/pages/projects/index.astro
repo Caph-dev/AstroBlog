@@ -97,7 +97,7 @@ const statusFilters = PROJECT_STATUS_KEYS.map((key) => {
 
 		<!-- 内容面板：项目卡片网格 -->
 		{projectMeta.length > 0 ? (
-			<div class="card-grid" style="--card-grid-min-width: 320px">
+			<div class="card-grid" style="--card-grid-min-width: min(100%, 320px)">
 				{projectMeta.map((p) => (
 					<ProjectCard
 						id={p.id}

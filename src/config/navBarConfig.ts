@@ -26,6 +26,10 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		children: [LinkPresets.Categories, LinkPresets.Tags],
 	});
 
+	links.push(LinkPresets.Projects);
+
+	links.push(LinkPresets.Booknav);
+
 	// 关于
 	links.push(LinkPresets.About);
 

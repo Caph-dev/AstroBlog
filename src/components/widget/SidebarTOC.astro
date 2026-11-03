@@ -95,7 +95,7 @@ const items = encrypted ? [] : computeTocItems(headings, { maxLevel: 3 });
     };
   }
 
-  // 侧栏目录在 #right-sidebar-static 内，不是 swup 容器：站内导航后其 DOM 不被替换。
+  // 侧栏目录渲染在静态侧边栏容器内（左侧 #left-sidebar-wrapper，右侧 #right-sidebar-static），不是 swup 容器：站内导航后其 DOM 不被替换。
   // attach() 内部会校验现有锚点是否属于当前正文——新鲜则直接附着（首屏 SSR），
   // 过时或缺失（导航后/加密解密后）则自动回退 DOM 遍历重建，无需在此区分场景。
   function initSidebarTOC() {
