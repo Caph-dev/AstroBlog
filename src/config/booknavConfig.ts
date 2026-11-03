@@ -49,6 +49,66 @@ export const booknavConfig: BooknavGroup[] = [
 				desc: "按版本归档的 AI 编程 Agent 系统提示词与工具定义",
 				weight: 10,
 			},
+			{
+				title: "Skills.sh",
+				url: "https://skills.sh/",
+				desc: "可复用的 Agent Skills 目录与排行榜",
+			},
+			{
+				title: "UI/UX Pro Max",
+				url: "https://skills.sh/nextlevelbuilder/ui-ux-pro-max-skill/ui-ux-pro-max",
+				desc: "面向多种技术栈的 UI 设计与体验指南",
+			},
+			{
+				title: "Anthropic PDF Skill",
+				url: "https://skills.sh/anthropics/skills/pdf",
+				desc: "PDF 提取、创建与处理的 Agent 技能",
+			},
+			{
+				title: "Anthropic PPTX Skill",
+				url: "https://skills.sh/anthropics/skills/pptx",
+				desc: "演示文稿创建、编辑与检查的 Agent 技能",
+			},
+			{
+				title: "Impeccable Critique",
+				url: "https://skills.sh/pbakaus/impeccable/critique",
+				desc: "分析界面层级、排版与交互的设计评审技能",
+			},
+			{
+				title: "GitHub Actions Docs Skill",
+				url: "https://skills.sh/xixu-me/skills/github-actions-docs",
+				desc: "依据官方文档查找 GitHub Actions 配置",
+			},
+			{
+				title: "MCPMarket",
+				url: "https://mcpmarket.com/zh",
+				desc: "第三方 MCP 服务器、客户端与技能目录",
+			},
+			{
+				title: "DeepWiki MCP",
+				url: "https://docs.devin.ai/zh/work-with-devin/deepwiki-mcp",
+				desc: "访问公共仓库知识库的 MCP 官方文档",
+			},
+			{
+				title: "Claude Code 工作原理",
+				url: "https://zhangchitc.github.io/claude_code/",
+				desc: "用交互演示拆解 Claude Code 的内部机制",
+			},
+			{
+				title: "LangChain Agent Memory",
+				url: "https://docs.langchain.com/oss/python/concepts/memory",
+				desc: "Agent 短期与长期记忆的概念指南",
+			},
+			{
+				title: "Pi Agent 源码学习",
+				url: "https://dg-ai-notes.pages.dev/",
+				desc: "Pi Agent 内核与开发实践教程",
+			},
+			{
+				title: "Maestro Flow",
+				url: "https://catlog22.github.io/maestro-flow/guides/quick-start",
+				desc: "面向编程 Agent 的工作流快速入门",
+			},
 		],
 	},
 	{
@@ -92,6 +152,89 @@ export const booknavConfig: BooknavGroup[] = [
 				desc: "一个功能强大且灵活的 CSS 框架",
 				weight: 6,
 			},
+			{
+				title: "代码随想录",
+				url: "https://programmercarl.com/",
+				desc: "算法与数据结构学习路线和题解",
+			},
+			{
+				title: "卡码笔记",
+				url: "https://notes.kamacoder.com/base/",
+				desc: "操作系统、网络与数据库等计算机基础知识",
+			},
+			{
+				title: "AI Coding Dictionary",
+				url: "https://www.aicodingdictionary.com/",
+				desc: "AI 编程和 Agent 工作流术语表",
+			},
+		],
+	},
+	{
+		id: "ai-evaluations",
+		name: "AI 评测",
+		icon: "material-symbols:smart-toy-outline",
+		desc: "模型与编程 Agent 的评测参考",
+		weight: 95,
+		items: [
+			{
+				title: "Artificial Analysis",
+				url: "https://artificialanalysis.ai/#intelligence",
+				desc: "独立模型能力、速度和成本评测",
+			},
+			{
+				title: "OpenBench",
+				url: "https://minghinmatthewlam.github.io/openbench/",
+				desc: "编程 Agent 框架的公开基准与测试方法",
+			},
+			{
+				title: "Agent Security League",
+				url: "https://www.endorlabs.com/research/ai-code-security-benchmark",
+				desc: "编程 Agent 生成代码的功能与安全性评测",
+			},
+			{
+				title: "Real API Pricing",
+				url: "https://real-api-pricing.vercel.app/#lang=zh&fee=0-30&channels=OpenAI&channels=Anthropic",
+				desc: "第三方模型套餐与用量价格比较，数据以站点标注为准",
+			},
+		],
+	},
+	{
+		id: "ui-components",
+		name: "UI 组件",
+		icon: "material-symbols:code-rounded",
+		desc: "组件库、设计系统与交互素材",
+		weight: 92,
+		items: [
+			{
+				title: "Kumo UI",
+				url: "https://kumo-ui.com/",
+				desc: "Cloudflare 的 React 组件库与设计系统",
+			},
+			{
+				title: "Astryx",
+				url: "https://astryx.atmeta.com/",
+				desc: "Meta 的开源 React 设计系统与组件",
+			},
+			{
+				title: "AI Elements",
+				url: "https://elements.ai-sdk.dev/",
+				desc: "构建 AI 对话与工作流界面的组件库",
+			},
+			{
+				title: "React Bits: Split Text",
+				url: "https://reactbits.dev/text-animations/split-text",
+				desc: "React 文本拆分与入场动画组件",
+			},
+			{
+				title: "Aceternity UI",
+				url: "https://ui.aceternity.com/",
+				desc: "React 与 Tailwind 界面组件和动效",
+			},
+			{
+				title: "Uiverse",
+				url: "https://uiverse.io/",
+				desc: "社区分享的开源 UI 元素与代码",
+			},
 		],
 	},
 	{
@@ -107,6 +250,11 @@ export const booknavConfig: BooknavGroup[] = [
 				desc: "清晰美观的 Astro 个人博客主题模板",
 				icon: "/favicon/firefly-32.png",
 				weight: 10,
+			},
+			{
+				title: "fff",
+				url: "https://github.com/dmtrKovalenko/fff",
+				desc: "面向 AI Agent 和开发工具的文件搜索项目",
 			},
 		],
 	},
@@ -128,6 +276,95 @@ export const booknavConfig: BooknavGroup[] = [
 				url: "https://www.iconfont.cn",
 				desc: "阿里巴巴矢量图标库",
 				weight: 9,
+			},
+			{
+				title: "Phosphor Icons",
+				url: "https://phosphoricons.com/",
+				desc: "可用于界面和图表的开源图标库",
+			},
+			{
+				title: "Skill Icons",
+				url: "https://skillicons.dev/",
+				desc: "用于 GitHub README 的技术栈图标",
+			},
+			{
+				title: "Dashboard Icons",
+				url: "https://dashboardicons.com/",
+				desc: "服务与应用的图标素材库",
+			},
+			{
+				title: "Color Hunt",
+				url: "https://colorhunt.co/",
+				desc: "社区配色方案与灵感",
+			},
+			{
+				title: "Coolors",
+				url: "https://coolors.co/",
+				desc: "调色板生成、图片取色与对比度检查",
+			},
+			{
+				title: "DesignPrompts",
+				url: "https://www.designprompts.dev/",
+				desc: "面向编程 Agent 的网页设计风格与提示词参考",
+			},
+			{
+				title: "DESIGN.md",
+				url: "https://github.com/google-labs-code/design.md",
+				desc: "向编程 Agent 描述视觉设计系统的规范与工具",
+			},
+			{
+				title: "Awwwards",
+				url: "https://www.awwwards.com/",
+				desc: "网页设计作品与获奖案例",
+			},
+			{
+				title: "Geist × Anthropic",
+				url: "https://geist.co/work/anthropic",
+				desc: "Anthropic 品牌视觉设计案例",
+			},
+			{
+				title: "Claude 界面设计解析",
+				url: "https://rar.design/posts/claude-interface-design-philosophy",
+				desc: "Claude 的色彩、字体与交互设计分析",
+			},
+			{
+				title: "Prompt Gallery",
+				url: "https://weiyyin.github.io/linux-do-gpt-image/prompt_gallery.html",
+				desc: "图片生成提示词与示例图库",
+			},
+		],
+	},
+	{
+		id: "developer-blogs",
+		name: "技术博客",
+		icon: "material-symbols:auto-stories-outline-rounded",
+		desc: "开发者的工程实践与思考",
+		weight: 85,
+		items: [
+			{
+				title: "Mario Zechner",
+				url: "https://mariozechner.at/",
+				desc: "编程 Agent、工具与软件开发实践",
+			},
+			{
+				title: "Armin Ronacher",
+				url: "https://lucumr.pocoo.org/",
+				desc: "软件工程、开源工具与 AI 开发随笔",
+			},
+			{
+				title: "Thariq Shihipar",
+				url: "https://www.thariq.io/",
+				desc: "工程实践与 AI 相关的个人文章",
+			},
+			{
+				title: "Boris Cherny",
+				url: "https://borischerny.com/",
+				desc: "TypeScript、Web 开发与工程实践",
+			},
+			{
+				title: "时歌的博客",
+				url: "https://www.lapis.cafe/",
+				desc: "AI、深度学习与技术思考",
 			},
 		],
 	},
@@ -155,6 +392,26 @@ export const booknavConfig: BooknavGroup[] = [
 				url: "https://carbon.now.sh",
 				desc: "把代码片段生成漂亮的图片",
 				weight: 8,
+			},
+			{
+				title: "ITDOG",
+				url: "https://www.itdog.cn/",
+				desc: "在线 Ping、网站测速、路由追踪与 DNS 查询",
+			},
+			{
+				title: "TLD List",
+				url: "https://tld-list.com/",
+				desc: "域名后缀的注册与续费价格比较",
+			},
+			{
+				title: "docsmall 图片压缩",
+				url: "https://docsmall.com/image-compress",
+				desc: "在线图片压缩工具",
+			},
+			{
+				title: "OpenAI 内容溯源",
+				url: "https://openai.com/zh-Hans-CN/research/verify/",
+				desc: "检查图片和音频中与 OpenAI 工具相关的溯源信号",
 			},
 		],
 	},
