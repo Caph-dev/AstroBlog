@@ -10,17 +10,16 @@
 
   <!-- Header -->
   <text class="sans" x="72" y="82" font-size="42" font-weight="700" fill="#1a1a1a">渐进式披露 skill 的四个阶段</text>
-  <text class="sans" x="72" y="124" font-size="22" fill="#8a857f">2026-05-28 → 2026-11-04 · 7 个提交 · 产品文件只有两份 Markdown 和一份 7 行配置</text>
+  <text class="sans" x="72" y="124" font-size="22" fill="#8a857f">7 个提交 · 产品文件只有两份 Markdown 和一份 7 行配置</text>
   <line x1="72" y1="146" x2="1528" y2="146" stroke="#e8e4df" stroke-width="2"/>
 
   <!-- Stage 1 -->
   <rect x="72" y="170" width="1456" height="210" rx="16" fill="#ffffff" stroke="#e8e4df" stroke-width="2"/>
   <rect x="72" y="170" width="6" height="210" rx="3" fill="#6b8e9f"/>
   <text class="sans" x="112" y="228" font-size="19" font-weight="700" fill="#6b8e9f">阶段 1 · 写成流程</text>
-  <text class="sans" x="112" y="268" font-size="24" font-weight="700" fill="#1a1a1a">2026-05-28</text>
-  <text class="mono" x="112" y="300" font-size="17" fill="#8a857f">490a61d</text>
-  <text class="mono" x="112" y="326" font-size="17" fill="#8a857f">cf60de8 · 2f9fe11</text>
-  <text class="sans" x="400" y="228" font-size="30" font-weight="700" fill="#1a1a1a">把一个动作写成可执行的步骤</text>
+  <text class="mono" x="112" y="268" font-size="18" fill="#8a857f">490a61d</text>
+  <text class="mono" x="112" y="298" font-size="18" fill="#8a857f">cf60de8 · 2f9fe11</text>
+  <text class="sans" x="400" y="228" font-size="30" font-weight="700" fill="#1a1a1a">把重构写成一条固定流程</text>
   <circle cx="408" cy="272" r="4" fill="#b8b2ab"/>
   <text class="sans" x="428" y="281" font-size="24" fill="#4a4a4a">361 行一次落地：README 241、SKILL 113、配置 7</text>
   <circle cx="408" cy="314" r="4" fill="#b8b2ab"/>
@@ -31,11 +30,10 @@
   <!-- Stage 2 -->
   <rect x="72" y="404" width="1456" height="210" rx="16" fill="#ffffff" stroke="#e8e4df" stroke-width="2"/>
   <rect x="72" y="404" width="6" height="210" rx="3" fill="#7a9a6b"/>
-  <text class="sans" x="112" y="462" font-size="19" font-weight="700" fill="#7a9a6b">阶段 2 · 先去具体化</text>
-  <text class="sans" x="112" y="502" font-size="24" font-weight="700" fill="#1a1a1a">2026-05-29</text>
-  <text class="mono" x="112" y="534" font-size="17" fill="#8a857f">faae6fa</text>
-  <text class="mono" x="112" y="560" font-size="17" fill="#8a857f">SKILL +27/−22</text>
-  <text class="sans" x="400" y="462" font-size="30" font-weight="700" fill="#1a1a1a">去具体化，并把矛盾检测前置</text>
+  <text class="sans" x="112" y="462" font-size="19" font-weight="700" fill="#7a9a6b">阶段 2 · 去具体化</text>
+  <text class="mono" x="112" y="502" font-size="18" fill="#8a857f">faae6fa</text>
+  <text class="mono" x="112" y="532" font-size="18" fill="#8a857f">SKILL +27/−22</text>
+  <text class="sans" x="400" y="462" font-size="30" font-weight="700" fill="#1a1a1a">矛盾检测移到分类之前</text>
   <circle cx="408" cy="506" r="4" fill="#b8b2ab"/>
   <text class="sans" x="428" y="515" font-size="24" fill="#4a4a4a">插入独立的「先检测矛盾」步骤，后续步骤编号整体后移</text>
   <circle cx="408" cy="548" r="4" fill="#b8b2ab"/>
@@ -47,9 +45,8 @@
   <rect x="72" y="638" width="1456" height="210" rx="16" fill="#ffffff" stroke="#e8e4df" stroke-width="2"/>
   <rect x="72" y="638" width="6" height="210" rx="3" fill="#b08a4f"/>
   <text class="sans" x="112" y="696" font-size="19" font-weight="700" fill="#b08a4f">阶段 3 · 写明边界</text>
-  <text class="sans" x="112" y="736" font-size="24" font-weight="700" fill="#1a1a1a">2026-06-30</text>
-  <text class="mono" x="112" y="768" font-size="17" fill="#8a857f">88a0817</text>
-  <text class="mono" x="112" y="794" font-size="17" fill="#8a857f">59c6974</text>
+  <text class="mono" x="112" y="736" font-size="18" fill="#8a857f">88a0817</text>
+  <text class="mono" x="112" y="766" font-size="18" fill="#8a857f">59c6974</text>
   <text class="sans" x="400" y="696" font-size="30" font-weight="700" fill="#1a1a1a">用删减，而不是新增，表达适用边界</text>
   <circle cx="408" cy="740" r="4" fill="#b8b2ab"/>
   <text class="sans" x="428" y="749" font-size="24" fill="#4a4a4a">README 两次净减 78 行，英文优先改为中文优先</text>
@@ -62,12 +59,11 @@
   <rect x="72" y="872" width="1456" height="210" rx="16" fill="#ffffff" stroke="#e8e4df" stroke-width="2"/>
   <rect x="72" y="872" width="6" height="210" rx="3" fill="#9a6b8e"/>
   <text class="sans" x="112" y="930" font-size="19" font-weight="700" fill="#9a6b8e">阶段 4 · 先判断</text>
-  <text class="sans" x="112" y="970" font-size="24" font-weight="700" fill="#1a1a1a">2026-11-04</text>
-  <text class="mono" x="112" y="1002" font-size="17" fill="#8a857f">7ed178f</text>
-  <text class="mono" x="112" y="1028" font-size="17" fill="#8a857f">SKILL +26/−16</text>
-  <text class="sans" x="400" y="930" font-size="30" font-weight="700" fill="#1a1a1a">「不拆」变成允许的结论</text>
+  <text class="mono" x="112" y="970" font-size="18" fill="#8a857f">7ed178f</text>
+  <text class="mono" x="112" y="1000" font-size="18" fill="#8a857f">SKILL +26/−16</text>
+  <text class="sans" x="400" y="930" font-size="30" font-weight="700" fill="#1a1a1a">拆分不再是默认动作</text>
   <circle cx="408" cy="974" r="4" fill="#b8b2ab"/>
-  <text class="sans" x="428" y="983" font-size="24" fill="#4a4a4a">目标改为在「不动／原地整理／拆分」中取最小有效改动</text>
+  <text class="sans" x="428" y="983" font-size="24" fill="#4a4a4a">目标改为在不动、原地整理或拆分中取最小有效改动</text>
   <circle cx="408" cy="1016" r="4" fill="#b8b2ab"/>
   <text class="sans" x="428" y="1025" font-size="24" fill="#4a4a4a">前提是用户没有明确要求拆分；分类改看使用频率与漏读后果</text>
   <circle cx="408" cy="1058" r="4" fill="#b8b2ab"/>
@@ -75,5 +71,5 @@
 
   <!-- Footer -->
   <rect x="72" y="1116" width="1456" height="76" rx="14" fill="#f2efeb"/>
-  <text class="sans" x="112" y="1164" font-size="23" fill="#5a5550">共同点：改动几乎都发生在「判断顺序」和「判断标准」上，而不是增加新功能。</text>
+  <text class="sans" x="112" y="1164" font-size="23" fill="#5a5550">改动集中在判断顺序和判断标准上，产品文件里没有新增命令、依赖或服务。</text>
 </svg>
