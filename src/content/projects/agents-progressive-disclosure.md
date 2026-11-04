@@ -21,7 +21,7 @@ link:
 
 效果不在这里证明。下面按提交顺序看这七个提交，重点是每一次改动把哪些默认做法换成了需要先回答的问题。
 
-![agents-progressive-disclosure 的四个阶段：按提交顺序排列，每段标注改动内容和判断标准的变化](/assets/images/projects/apd-evolution.png)
+![agents-progressive-disclosure 的四个阶段：按提交顺序排列，每段标注改动内容和判断标准的变化](/assets/images/projects/apd-evolution-stages.png)
 
 ## 初版把重构写成了一条固定流程
 
