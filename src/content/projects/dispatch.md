@@ -10,12 +10,6 @@ tags:
 status: published
 image: /assets/images/projects/dispatch-demo.png
 link:
-  - label: GitHub
-    icon: fa7-brands:github
-    value: https://github.com/Caph-dev/Dispatch
-  - label: 前端
-    icon: fa7-brands:github
-    value: https://github.com/Caph-dev/DispatchFrontend
   - label: Demo
     icon: material-symbols:open-in-new
     value: https://dispatch-demo.caph.me
@@ -125,18 +119,6 @@ routing_score = 成功率 × 0.7 + 延迟得分 × 0.3
 - 知识库：检索、导入文档、上传 `.txt` 和 `.md`、查看已加载的 Skills
 - 评测：跑后端内置评测，看通过率、平均评分和优化建议
 
-它没有自己的业务逻辑，做的就是把后端的中间结果摊开给人看。开发模式下 Vite 把 `/api/python` 代理到 8000，前端挂在 5173。演示环境只跑 Python 后端，`src/lib/backends.js` 里保留的 Java 客户端是给本地内部调用用的。
-
-## 已知边界
-
-- Grafana 面板和告警规则在 `config/` 里是预留目录，当前 Compose 不启动 Grafana，规则文件也没挂进 Prometheus。应用内真正生效的告警通道只有 webhook
-- 路由评分里「多实例选最优」的那部分，在单实例部署下退化成恒定值，只有监控降权那半仍然有效
-- 接口没有鉴权。Nginx 只按 IP 做了限流，10 请求/秒、突发 20、并发连接 10，挡得住误用挡不住刻意刷
-- 评测基线和知识库都在 `data/` 下，这个目录被 gitignore 掉了，换机器要手动迁移
-- HTTPS 的 server 块在 `config/nginx/nginx.conf` 里还是注释状态，对外靠上层代理终结 TLS
-
 ## 相关链接
 
-- 后端仓库：[Caph-dev/Dispatch](https://github.com/Caph-dev/Dispatch)
-- 前端仓库：[Caph-dev/DispatchFrontend](https://github.com/Caph-dev/DispatchFrontend)
 - 在线演示：[dispatch-demo.caph.me](https://dispatch-demo.caph.me)
