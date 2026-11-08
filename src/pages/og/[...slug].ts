@@ -219,12 +219,21 @@ export async function GET({
 	const { post } = props;
 
 	// Load and get static assets
+	// OG 卡片底色是暗色，优先取 dark 主题中尺寸最大的 png 图标
 	let iconPath = "/favicon/favicon-dark-192.png";
 	if (siteConfig.favicon.length > 0) {
-		const pngFavicon = siteConfig.favicon.find((f) =>
+		const areaOf = (sizes?: string) => {
+			const m = sizes?.match(/^(\d+)x(\d+)$/);
+			return m ? Number(m[1]) * Number(m[2]) : 0;
+		};
+		const pngs = siteConfig.favicon.filter((f) =>
 			f.src.toLowerCase().endsWith(".png"),
 		);
-		iconPath = (pngFavicon ?? siteConfig.favicon[0]).src;
+		const preferred = [...pngs].sort((a, b) => {
+			const darkDiff = Number(b.theme === "dark") - Number(a.theme === "dark");
+			return darkDiff !== 0 ? darkDiff : areaOf(b.sizes) - areaOf(a.sizes);
+		})[0];
+		iconPath = (preferred ?? siteConfig.favicon[0]).src;
 	}
 
 	const hue = siteConfig.themeColor.hue;

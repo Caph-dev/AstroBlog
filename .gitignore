@@ -47,3 +47,6 @@ package/
 .codex*
 .claude
 .mimocode
+
+# image-gen 临时候选与处理脚本
+.image-gen/

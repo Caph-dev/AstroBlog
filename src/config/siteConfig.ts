@@ -80,14 +80,14 @@ export const siteConfig: SiteConfig = {
 	// Favicon 配置
 	// 如果启用了OpenGraph图片功能，数组中需要包含png格式的favicon图标
 	favicon: [
-		{
-			// 图标文件路径
-			src: "/favicon/firefly-32.png",
-			// 可选，指定主题 'light' | 'dark'
-			// theme: "light",
-			// 可选，图标大小
-			// sizes: "32x32",
-		},
+		{ src: "/favicon/favicon-light-32.png", theme: "light", sizes: "32x32" },
+		{ src: "/favicon/favicon-light-128.png", theme: "light", sizes: "128x128" },
+		{ src: "/favicon/favicon-light-180.png", theme: "light", sizes: "180x180" },
+		{ src: "/favicon/favicon-light-192.png", theme: "light", sizes: "192x192" },
+		{ src: "/favicon/favicon-dark-32.png", theme: "dark", sizes: "32x32" },
+		{ src: "/favicon/favicon-dark-128.png", theme: "dark", sizes: "128x128" },
+		{ src: "/favicon/favicon-dark-180.png", theme: "dark", sizes: "180x180" },
+		{ src: "/favicon/favicon-dark-192.png", theme: "dark", sizes: "192x192" },
 	],
 
 	// 导航栏配置

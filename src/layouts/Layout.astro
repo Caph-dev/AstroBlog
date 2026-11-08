@@ -110,9 +110,15 @@ if (title) {
 
 const favicons: Favicon[] =
 	siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons;
-// apple-touch-icon：优先取 favicon 中的 png，否则取第一个
+// apple-touch-icon：优先取 favicon 中 180x180 的 png（iOS 主屏尺寸），否则取第一张 png
 const appleTouchIcon =
-	favicons.find((f) => f.src.toLowerCase().endsWith(".png")) ?? favicons[0];
+	favicons.find(
+		(f) =>
+			f.src.toLowerCase().endsWith(".png") &&
+			(f.sizes === "180x180" || /-180\.png$/i.test(f.src)),
+	) ??
+	favicons.find((f) => f.src.toLowerCase().endsWith(".png")) ??
+	favicons[0];
 
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
