@@ -663,6 +663,16 @@ html[data-wallpaper-mode="fullscreen"][data-fullscreen-layout="classic"] #wallpa
     }
 }
 
+/* 亮色主题下 ASCII canvas 由 invert(1) 反相成纯白底（画布原始底色就是 #000）。
+   纯白底上，90% 白的卡片算下来也是 #FFF，卡片会彻底消失在背景里。
+   这两个变量是亮色下的分层旋钮：
+   --ascii-ocean-light-brightness 压暗画布底色，让背景退成浅灰；
+   --ascii-ocean-light-card-opacity 决定卡片保留多少自身底色（越接近 100% 越像纸白）。 */
+:root {
+    --ascii-ocean-light-brightness: 0.94;
+    --ascii-ocean-light-card-opacity: 96%;
+}
+
 .ascii-ocean-canvas {
     position: fixed;
     inset: 0;
@@ -681,7 +691,7 @@ html[data-wallpaper-mode="banner"]:has(#wallpaper-wrapper[data-ascii-ocean="read
 }
 
 html:not(.dark)[data-wallpaper-mode="banner"]:has(#wallpaper-wrapper[data-ascii-ocean="ready"]) .ascii-ocean-canvas {
-    filter: invert(1) hue-rotate(180deg);
+    filter: invert(1) hue-rotate(180deg) brightness(var(--ascii-ocean-light-brightness, 0.94));
 }
 
 html[data-wallpaper-mode="banner"] #wallpaper-wrapper[data-ascii-ocean="ready"] #banner-images-container {
@@ -697,6 +707,10 @@ html[data-wallpaper-mode="banner"] #wallpaper-wrapper[data-ascii-ocean="ready"] 
 
 html[data-wallpaper-mode="banner"]:has(#wallpaper-wrapper[data-ascii-ocean="ready"]) #content-panel .card-base {
     background-color: color-mix(in oklch, var(--card-bg) 90%, transparent);
+}
+
+html:not(.dark)[data-wallpaper-mode="banner"]:has(#wallpaper-wrapper[data-ascii-ocean="ready"]) #content-panel .card-base {
+    background-color: color-mix(in oklch, var(--card-bg) var(--ascii-ocean-light-card-opacity, 96%), transparent);
 }
 
 html:not(.dark)[data-wallpaper-mode="banner"] #wallpaper-wrapper[data-ascii-ocean="ready"] .banner-title,
